@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Heading, Input, Button, useDisclosure } from "@chakra-ui/react";
+import { Box, Heading, Input, Button, useDisclosure, Flex } from "@chakra-ui/react";
 import HalaqahTable from "./HalaqahTable";
 import HalaqahForm from "./HalaqahForm";
 import { getHalaqahList, addHalaqah, updateHalaqah, deleteHalaqah } from "./halaqahService";
@@ -30,26 +30,23 @@ export default function HalaqahPage() {
     onOpen();
   };
 
-  const handleEdit = (halaqah: Halaqah) => {
-    setEditData(halaqah);
-    onOpen();
-  };
-
   const handleDelete = async (id: string) => {
     await deleteHalaqah(id);
     setHalaqahList(halaqahList.filter((h) => h.id !== id));
   };
 
   return (
-    <Box p={6}>
-      <Heading mb={4}>Halaqah Saya</Heading>
-      <Box display="flex" justifyContent="space-between" mb={4}>
-        <Input placeholder="Cari Halaqah..." value={search} onChange={handleSearch} width="300px" />
-        <Button colorScheme="green" onClick={handleAdd}>
+    <Box w="full" maxW="container.md" mx="auto" p={4} overflow="hidden">
+      <Heading mb={4} textAlign="center">
+        Halaqah Saya
+      </Heading>
+      <Flex direction={{ base: "column", md: "row" }} gap={2} mb={4}>
+        <Input placeholder="Cari Halaqah..." value={search} onChange={handleSearch} flex="1" />
+        <Button colorScheme="green" onClick={handleAdd} w={{ base: "full", md: "auto" }}>
           Tambah Halaqah
         </Button>
-      </Box>
-      <HalaqahTable halaqahList={halaqahList} onEdit={handleEdit} onDelete={handleDelete} />
+      </Flex>
+      <HalaqahTable halaqahList={halaqahList} onEdit={setEditData} onDelete={handleDelete} />
       <HalaqahForm isOpen={isOpen} onClose={onClose} editData={editData} setHalaqahList={setHalaqahList} />
     </Box>
   );
