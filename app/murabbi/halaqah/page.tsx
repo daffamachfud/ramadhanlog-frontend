@@ -42,7 +42,7 @@ export default function HalaqahPage() {
         Halaqah Saya
       </Heading>
       <Flex direction={{ base: "column", md: "row" }} gap={2} mb={4}>
-        <Input placeholder="Cari Halaqah..." value={search} onChange={handleSearch} flex="1" />
+        {/* <Input placeholder="Cari Halaqah..." value={search} onChange={handleSearch} flex="1" /> */}
         <Button colorScheme="green" onClick={handleAdd} w={{ base: "full", md: "auto" }}>
           Tambah Halaqah
         </Button>

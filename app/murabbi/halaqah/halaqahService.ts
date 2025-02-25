@@ -35,6 +35,40 @@ export async function getHalaqahList() {
   }
 }
 
+export async function addHalaqah(data: { name: string; code: string }) {
+  try {
+    const cookies = parseCookies();
+    const token = cookies.token;
+    if (!token) throw new Error("Token tidak ditemukan");
+
+    const response = await fetch(api.addHalaqah, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Gagal menambahkan halaqah");
+    }
+
+    const result = await response.json();
+    return {
+      id: result.data.id,
+      nama: result.data.name,
+      kode: result.data.code,
+      jumlahAnggota: 0, // Default 0 karena baru dibuat
+    };
+  } catch (error) {
+    console.error("Error adding halaqah:", error);
+    throw error;
+  }
+}
+
 // export async function addHalaqah(data: { name: string; code: string }): Promise<Halaqah> {
 //   const response = await fetch("API_URL", {
 //     method: "POST",

@@ -1,11 +1,17 @@
 import { Table, Thead, Tbody, Tr, Th, Td, Button, Box } from "@chakra-ui/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import LaporanTholibDetail from "./LaporanTholibDetail";
-import { LaporanTholib } from "./types"; // Import tipe
+import { LaporanTholib } from "./types";
 
 export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib[] }) {
   const [selectedTholib, setSelectedTholib] = useState<LaporanTholib | null>(null);
+  const router = useRouter();
 
+  const goToDetail = (id: number) => {
+    router.push(`/murabbi/laporan-tholib/${id.toString()}`);
+  };
+  
   return (
     <Box overflowX="auto" w="full">
       <Table variant="simple" size="sm">
@@ -19,10 +25,15 @@ export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib
         <Tbody>
           {laporan.map((tholib) => (
             <Tr key={tholib.id}>
-              <Td whiteSpace="nowrap">{tholib.nama}</Td>
+              <Td whiteSpace="nowrap">{tholib.name}</Td>
               <Td whiteSpace="nowrap">{tholib.halaqah}</Td>
               <Td>
-                <Button size="sm" colorScheme="blue" onClick={() => setSelectedTholib(tholib)}>
+                 {/* Navigasi ke halaman detail */}
+                 <Button 
+                  size="sm" 
+                  colorScheme="blue" 
+                  onClick={() => goToDetail(tholib.id)}
+                >
                   Lihat Detail
                 </Button>
               </Td>
@@ -31,7 +42,12 @@ export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib
         </Tbody>
       </Table>
 
-      {selectedTholib && <LaporanTholibDetail tholib={selectedTholib} onClose={() => setSelectedTholib(null)} />}
+      {selectedTholib && (
+  <LaporanTholibDetail
+    params={{ tholibId: String(selectedTholib.id) }} // Ubah ke format params yang sesuai
+    onClose={() => setSelectedTholib(null)}
+  />
+)}
     </Box>
   );
 }

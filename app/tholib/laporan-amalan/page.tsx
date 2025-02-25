@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Heading, Button, VStack, Text } from "@chakra-ui/react";
 import IbadahList from "../laporan-amalan/components/IbadahList";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { api } from "@/lib/api";
+import { parseCookies } from "nookies";
 
 export default function LaporanAmalanPage() {
   const [filter, setFilter] = useState<"weekly" | "daily">("daily");
+  const [loading, setLoading] = useState(true);
+  const [weeklyReport, setWeeklyReport] = useState([]);
+  const [dailyReport, setDailyReport] = useState<DailyReport[]>([]);
+
+  type DailyReport = {
+    name: string;
+    done: boolean;
+  };
 
   // Tanggal sekarang
   const today = new Date();
@@ -21,6 +31,64 @@ export default function LaporanAmalanPage() {
 
   const formattedStartWeek = format(startOfWeek, "dd MMMM yyyy", { locale: id });
   const formattedEndWeek = format(endOfWeek, "dd MMMM yyyy", { locale: id });
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        const cookies = parseCookies();
+        const token = cookies.token;
+        if (!token) return;
+
+        const response = await fetch(api.dashboardTholib, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          throw new Error("Gagal mengambil data dashboard");
+        }
+
+        const data = await response.json();
+        const { dataPerminggu, statusAmalan } = data;
+
+        console.log("Data dari API:", data);
+        
+        // Format data mingguan
+        const formattedWeekly = dataPerminggu.map((item: { name: string; value: number }) => ({
+          day: item.name,
+          completed: item.value,
+          total: 17, // Sesuaikan dengan jumlah amalan total yang ada
+        }));
+
+        // Format data harian
+        const formattedDaily: DailyReport[] = statusAmalan
+        ? [
+            ...(statusAmalan.completed?.map((item: string) => ({
+              name: item,
+              done: true,
+            })) || []),
+            ...(statusAmalan.notCompleted?.map((item: string) => ({
+              name: item,
+              done: false,
+            })) || []),
+          ]
+        : [];
+
+        setWeeklyReport(formattedWeekly);
+        setDailyReport(formattedDaily);
+
+      } catch (error) {
+        console.error("Gagal memuat data dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardData();
+  }, []);
 
   return (
     <Box minH="100vh" p={6} bg="gray.100">
@@ -62,7 +130,7 @@ export default function LaporanAmalanPage() {
         </VStack>
 
         {/* Daftar Ibadah */}
-        <IbadahList filter={filter} />
+        <IbadahList filter={filter} weeklyData={weeklyReport} dailyData={dailyReport} />
       </Box>
     </Box>
   );
