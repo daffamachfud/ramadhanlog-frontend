@@ -6,6 +6,7 @@ import WeeklySummary from "./components/WeeklySummary";
 import DailySummary from "./components/DailySummary";
 import AmalanChart from "./components/AmalanChart";
 import AmalanList from "./components/AmalanList";
+import withAuth from "@/app/utils/withAuth";
 
 const TholibDashboard = () => {
   // State untuk ringkasan amalan harian dan mingguan
@@ -60,4 +61,4 @@ const TholibDashboard = () => {
   );
 };
 
-export default TholibDashboard;
+export default withAuth(TholibDashboard, ["tholib"]); 

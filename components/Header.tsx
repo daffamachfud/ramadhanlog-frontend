@@ -2,10 +2,19 @@
 
 import { Box, Flex, IconButton, Text } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bell } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
+import { destroyCookie } from "nookies";
 
 export default function Header({ title }: { title: string }) {
   const router = useRouter();
+
+  const handleLogout = () => {
+    // Hapus token dari cookie
+    destroyCookie(null, "token");
+
+    // Redirect ke halaman login
+    router.push("/auth/login");
+  };
 
   return (
     <Box
@@ -23,7 +32,13 @@ export default function Header({ title }: { title: string }) {
         <Text fontSize="lg" fontWeight="bold">
           {title}
         </Text>
-        <IconButton aria-label="Notifications" icon={<Bell size={20} />} variant="ghost" color="white" />
+        <IconButton
+          aria-label="Logout"
+          icon={<LogOut size={20} />}
+          variant="ghost"
+          color="white"
+          onClick={handleLogout}
+        />
       </Flex>
     </Box>
   );
