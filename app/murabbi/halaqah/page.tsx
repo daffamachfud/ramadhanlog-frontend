@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { Box, Heading, Input, Button, useDisclosure, Flex } from "@chakra-ui/react";
 import HalaqahTable from "./HalaqahTable";
 import HalaqahForm from "./HalaqahForm";
-import { getHalaqahList, addHalaqah, updateHalaqah, deleteHalaqah } from "./halaqahService";
 import { Halaqah } from "./types";
+import { getHalaqahList } from "./halaqahService";
 
 export default function HalaqahPage() {
+
   const [halaqahList, setHalaqahList] = useState<Halaqah[]>([]);
   const [search, setSearch] = useState("");
   const [editData, setEditData] = useState<Halaqah | null>(null);
@@ -31,7 +32,7 @@ export default function HalaqahPage() {
   };
 
   const handleDelete = async (id: string) => {
-    await deleteHalaqah(id);
+    // await deleteHalaqah(id);
     setHalaqahList(halaqahList.filter((h) => h.id !== id));
   };
 
