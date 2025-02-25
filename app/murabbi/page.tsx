@@ -1,22 +1,27 @@
 "use client";
 
-import { Box, Heading, Text, SimpleGrid, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, Card, CardBody, VStack, HStack, Badge, Divider } from "@chakra-ui/react";
-
-// Contoh data laporan harian (dummy data, nanti bisa diganti dengan fetch dari API)
-const dailyReport = {
-  totalTholib: 20, // Total tholib dalam halaqah
-  reportedTholib: 15, // Tholib yang sudah mengisi laporan hari ini
-  tholibReports: [
-    { name: "Ahmad", completedAmalan: ["Bangun + Wudhu", "Tilawah 1 Juz", "Sholat Dhuha"], tilawah: 1 },
-    { name: "Ali", completedAmalan: ["Sahur dalam Keadaan Suci", "Ifthor ala Nabi", "Sedekah Subuh"], tilawah: 0 },
-    { name: "Zainab", completedAmalan: ["Sholat Sunnah 2 Rakaat", "Sholat Tarawih 11 Rakaat", "Tafakur Harian"], tilawah: 1 },
-    { name: "Fatimah", completedAmalan: ["Bangun + Wudhu", "Sholat Sunnah 2 Rakaat", "Tilawah 1 Juz"], tilawah: 1 },
-  ],
-};
-
-// Hitung rata-rata Tilawah
-const totalTilawah = dailyReport.tholibReports.reduce((acc, tholib) => acc + tholib.tilawah, 0);
-const avgTilawah = totalTilawah / dailyReport.reportedTholib;
+import {
+  Box,
+  Heading,
+  Spinner,
+  Text,
+  SimpleGrid,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  Card,
+  CardBody,
+  VStack,
+  HStack,
+  Badge,
+  Divider,
+} from "@chakra-ui/react";
+import withAuth from "@/app/utils/withAuth";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import { parseCookies } from "nookies";
 
 const formatTilawah = (value: number): string => {
   const fractionMap: Record<number, string> = {
@@ -35,13 +40,83 @@ const formatTilawah = (value: number): string => {
   };
 
   if (Number.isInteger(value)) return `${value} Juz`;
-  
   const roundedValue = parseFloat(value.toFixed(2)); // Dibulatkan ke 2 angka desimal untuk pencocokan
-  
   return fractionMap[roundedValue] || `${roundedValue} Juz`;
 };
 
-export default function DashboardMurabbi() {
+const DashboardMurabbi = () => {
+  const [dashboardData, setDashboardData] = useState<{
+    totalTholib: number;
+    reportedTholib: number;
+    tholibReports: { id: number; name: string; nama_halaqah: string }[];
+    avgTilawah: number;
+  }>({
+    totalTholib: 0,
+    reportedTholib: 0,
+    tholibReports: [],
+    avgTilawah: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const cookies = parseCookies();
+        const token = cookies.token;
+        if (!token) {
+          setError("Anda harus login terlebih dahulu.");
+          setLoading(false);
+          return;
+        }
+        const response = await fetch(api.dashboardMurrabi, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.success) {
+          console.log("hasil data :", data.data);
+          setDashboardData({
+            ...data.data,
+            tholibReports: data.data.tholibReports.map((t: any) => ({
+              id: t.id,
+              name: t.user_name, // Gunakan alias yang benar
+              nama_halaqah: t.nama_halaqah, // Pastikan nama halaqah sesuai alias
+            })),
+          });
+        } else {
+          setError("Gagal mengambil data dashboard");
+        }
+      } catch (error) {
+        console.error("Gagal mengambil data dashboard:", error);
+        setError("Terjadi kesalahan saat mengambil data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box p={6} textAlign="center">
+        <Spinner size="xl" />
+        <Text mt={4}>Memuat data...</Text>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={6} textAlign="center" color="red.500">
+        <Text>{error}</Text>
+      </Box>
+    );
+  }
+
   return (
     <Box p={6}>
       <Heading mb={4}>Dashboard Murabbi</Heading>
@@ -52,10 +127,14 @@ export default function DashboardMurabbi() {
           <CardBody>
             <Stat>
               <StatLabel>Tholib Sudah Laporan</StatLabel>
-              <StatNumber>{dailyReport.reportedTholib}</StatNumber>
+              <StatNumber>{dashboardData.reportedTholib}</StatNumber>
               <StatHelpText>
                 <StatArrow type="increase" />
-                {((dailyReport.reportedTholib / dailyReport.totalTholib) * 100).toFixed(1)}%
+                {(
+                  (dashboardData.reportedTholib / dashboardData.totalTholib) *
+                  100
+                ).toFixed(1)}
+                %
               </StatHelpText>
             </Stat>
           </CardBody>
@@ -65,7 +144,7 @@ export default function DashboardMurabbi() {
           <CardBody>
             <Stat>
               <StatLabel>Rata-rata Tilawah</StatLabel>
-              <StatNumber>{formatTilawah(avgTilawah)}</StatNumber>
+              <StatNumber>{formatTilawah(dashboardData.avgTilawah)}</StatNumber>
             </Stat>
           </CardBody>
         </Card>
@@ -74,7 +153,9 @@ export default function DashboardMurabbi() {
           <CardBody>
             <Stat>
               <StatLabel>Tholib Belum Laporan</StatLabel>
-              <StatNumber>{dailyReport.totalTholib - dailyReport.reportedTholib}</StatNumber>
+              <StatNumber>
+                {dashboardData.totalTholib - dashboardData.reportedTholib}
+              </StatNumber>
             </Stat>
           </CardBody>
         </Card>
@@ -85,23 +166,33 @@ export default function DashboardMurabbi() {
         Highlight Laporan Tholib Hari Ini
       </Heading>
       <VStack align="stretch" spacing={4}>
-        {dailyReport.tholibReports.map((tholib) => (
-          <Box key={tholib.name} p={4} borderWidth="1px" borderRadius="md" boxShadow="md">
-            <HStack justifyContent="space-between">
-              <Text fontWeight="bold">{tholib.name}</Text>
-              <Badge colorScheme="green">{tholib.completedAmalan.length} Amalan</Badge>
-            </HStack>
-            <Divider my={2} />
-            <HStack spacing={2} wrap="wrap">
-              {tholib.completedAmalan.map((amalan) => (
-                <Badge key={amalan} colorScheme="blue">
-                  {amalan}
-                </Badge>
-              ))}
-            </HStack>
-          </Box>
-        ))}
+        {dashboardData.tholibReports.length > 0 ? (
+          dashboardData.tholibReports.map((tholib) => (
+            <Box
+              key={tholib.id}
+              p={4}
+              borderWidth="1px"
+              borderRadius="md"
+              boxShadow="md"
+            >
+              <HStack justifyContent="space-between">
+                <Box>
+                  <Text fontWeight="bold">{tholib.name}</Text>
+                  <Text fontSize="sm" color="gray.500">
+                    {tholib.nama_halaqah}
+                  </Text>
+                </Box>
+                <Badge colorScheme="green">Sudah Laporan</Badge>
+              </HStack>
+            </Box>
+          ))
+        ) : (
+          <Text textAlign="center" color="gray.500">
+            Belum ada tholib yang laporan hari ini.
+          </Text>
+        )}
       </VStack>
     </Box>
   );
-}
+};
+export default withAuth(DashboardMurabbi, ["murabbi"]);
