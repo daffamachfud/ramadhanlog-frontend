@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://haizumapp.com/api"; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://haizumapp.com/api"; 
 
 export const api = {
   register: `${API_URL}/auth/register`,
