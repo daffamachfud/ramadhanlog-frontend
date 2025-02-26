@@ -64,7 +64,7 @@ export default function LoginPage() {
   return (
     <Box minH="100vh" display="flex" justifyContent="center" alignItems="center" bg="gray.100">
       <Box w={{ base: "90%", md: "400px" }} p="6" boxShadow="lg" borderRadius="md" bg="white">
-        <Heading size="lg" mb="4" textAlign="center">Login Ramadhan Log</Heading>
+        <Heading size="lg" mb="4" textAlign="center">Login Ramadhan Yaumiyah</Heading>
         <VStack spacing="4">
           {error && <Text color="red.500">{error}</Text>}
           <FormControl isRequired>
