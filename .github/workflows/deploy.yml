@@ -21,7 +21,8 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           script: |
             cd /var/www/ramadhanlog-frontend
+            git config pull.rebase false
             git pull origin main 
             npm install
-            npm run build build # atau npm run build
+            npm run build
             pm2 restart ramadhanlog-frontend 
