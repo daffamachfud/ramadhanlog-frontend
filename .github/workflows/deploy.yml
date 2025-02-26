@@ -2,17 +2,15 @@ name: Deploy Frontend to VPS
 on:
   push:
     branches:
-      - main # atau cabang yang anda gunakan
+      - main # Jalankan hanya saat push ke main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install dependencies
-        run: npm install # atau npm install
-      - name: Build app
-        run: npm run build # atau npm run build
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -21,8 +19,27 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           script: |
             cd /var/www/ramadhanlog-frontend
+            
+            # Pastikan branch bersih dan update kode terbaru
+            git reset --hard origin/main
             git config pull.rebase false
             git pull origin main 
+            
+            # Upgrade Node.js jika perlu
+            if ! command -v node &> /dev/null || [ "$(node -v)" != "v18"* ]; then
+              nvm install 18
+              nvm use 18
+              nvm alias default 18
+            fi
+            
+            # Install dependency & build ulang
             npm install
             npm run build
-            pm2 restart ramadhanlog-frontend 
+            
+            # Pastikan PM2 terinstall
+            if ! command -v pm2 &> /dev/null; then
+              npm install -g pm2
+            fi
+            
+            # Restart service dengan PM2
+            pm2 restart ramadhanlog-frontend || pm2 start npm --name "ramadhanlog-frontend" -- run start
