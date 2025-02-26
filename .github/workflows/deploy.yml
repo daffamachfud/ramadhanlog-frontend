@@ -34,6 +34,7 @@ jobs:
             
             # Install dependency & build ulang
             npm install
+            rm -rf .next  # Hapus cache biar build selalu fresh
             npm run build
             
             # Pastikan PM2 terinstall
