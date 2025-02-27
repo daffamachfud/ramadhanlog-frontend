@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Box, Input, Button, VStack } from "@chakra-ui/react";
-import { MurabbiProfile } from "./types";
+import { TholibProfile } from "./types";
 
 export default function ProfileForm({
   profile,
   onClose,
   setProfile,
 }: {
-  profile: MurabbiProfile;
+  profile: TholibProfile;
   onClose: () => void;
-  setProfile: (profile: MurabbiProfile) => void;
+  setProfile: (profile: TholibProfile) => void;
 }) {
   const [formData, setFormData] = useState(profile);
 

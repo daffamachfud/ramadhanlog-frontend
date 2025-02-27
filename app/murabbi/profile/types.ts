@@ -1,9 +1,7 @@
-export type MurabbiProfile = {
+export type TholibProfile = {
     id: string;
     name: string;
     email: string;
-    phone?: string;
-    halaqahCount: number;
-    password?: string;
+    phone: string;
+    role: string;
   };
-  

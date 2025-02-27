@@ -2,20 +2,33 @@
 
 import { useEffect, useState } from "react";
 import { Box, Spinner, Heading, Button, VStack } from "@chakra-ui/react";
-import { getMurabbiProfile } from "./profileService";
-import { MurabbiProfile } from "./types";
+import { TholibProfile } from "./types";
 import ProfileCard from "./ProfileCard";
 import ProfileForm from "./ProfileForm";
+import { api } from "@/lib/api";
+import { parseCookies } from "nookies";
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<MurabbiProfile | null>(null);
+  const [profile, setProfile] = useState<TholibProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const data = await getMurabbiProfile();
+        const cookies = parseCookies();
+        const token = cookies.token;
+        if (!token) return;
+
+        const response = await fetch(api.getProfile, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        const data = await response.json();
         setProfile(data);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -36,16 +49,20 @@ export default function ProfilePage() {
 
   return (
     <Box p={6}>
-      <Heading mb={4}>Edit Profil Murabbi</Heading>
+      <Heading mb={4}>Profil Tholib</Heading>
       <VStack spacing={4} align="start">
         {isEditing ? (
-          <ProfileForm profile={profile!} onClose={() => setIsEditing(false)} setProfile={setProfile} />
+          <ProfileForm
+            profile={profile!}
+            onClose={() => setIsEditing(false)}
+            setProfile={setProfile}
+          />
         ) : (
           <>
             <ProfileCard profile={profile!} />
-            <Button colorScheme="blue" onClick={() => setIsEditing(true)}>
+            {/* <Button colorScheme="blue" onClick={() => setIsEditing(true)}>
               Edit Profil
-            </Button>
+            </Button> */}
           </>
         )}
       </VStack>
