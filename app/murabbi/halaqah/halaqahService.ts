@@ -27,6 +27,7 @@ export async function getHalaqahList() {
       id: halaqah.id,
       nama: halaqah.nama_halaqah,
       kode: halaqah.code,
+      kodePengawas: halaqah.code_pengawas,
       jumlahAnggota: halaqah.jumlah_anggota,
     }));
   } catch (error) {
@@ -35,7 +36,7 @@ export async function getHalaqahList() {
   }
 }
 
-export async function addHalaqah(data: { name: string; code: string }) {
+export async function addHalaqah(data: { name: string; code: string, code_pengawas: string }) {
   try {
     const cookies = parseCookies();
     const token = cookies.token;
@@ -61,6 +62,7 @@ export async function addHalaqah(data: { name: string; code: string }) {
       id: result.data.id,
       nama: result.data.name,
       kode: result.data.code,
+      kodePengawas: result.data.code_pengawas,
       jumlahAnggota: 0, // Default 0 karena baru dibuat
     };
   } catch (error) {
@@ -68,25 +70,3 @@ export async function addHalaqah(data: { name: string; code: string }) {
     throw error;
   }
 }
-
-// export async function addHalaqah(data: { name: string; code: string }): Promise<Halaqah> {
-//   const response = await fetch("API_URL", {
-//     method: "POST",
-//     body: JSON.stringify(data),
-//     headers: { "Content-Type": "application/json" },
-//   });
-//   return response.json();
-// }
-
-// export async function updateHalaqah(id: string, data: { name: string; code: string }): Promise<Halaqah> {
-//   const response = await fetch(`${"API_URL"}/${id}`, {
-//     method: "PUT",
-//     body: JSON.stringify(data),
-//     headers: { "Content-Type": "application/json" },
-//   });
-//   return response.json();
-// }
-
-// export async function deleteHalaqah(id: string): Promise<void> {
-//   await fetch(`${"API_URL"}/${id}`, { method: "DELETE" });
-// }

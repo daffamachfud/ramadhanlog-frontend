@@ -32,19 +32,32 @@ export default function HalaqahForm({
 }: HalaqahFormProps) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const [code_pengawas, setCodePengawas] = useState("");
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
     setName(editData?.nama || "");
     setCode(editData?.kode || "");
+    setCodePengawas(editData?.kodePengawas || "");
   }, [editData]);
 
   const handleSubmit = async () => {
-    if (!name || !code) {
+    if (!name || !code || !code_pengawas) {
       toast({
         title: "Error",
         description: "Nama dan kode halaqah wajib diisi",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (code_pengawas === code) {
+      toast({
+        title: "Error",
+        description: "kode halaqah untuk pengawas harus di buat berbeda",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -57,7 +70,7 @@ export default function HalaqahForm({
         // const updatedHalaqah = await updateHalaqah(editData.id, { name, code });
         // setHalaqahList((prev: Halaqah[]) => prev.map((h) => (h.id === updatedHalaqah.id ? updatedHalaqah : h)));
       } else {
-        const newHalaqah = await addHalaqah({ name, code });
+        const newHalaqah = await addHalaqah({ name, code, code_pengawas });
         setHalaqahList((prev: Halaqah[]) => [...prev, newHalaqah]);
       }
       toast({
@@ -99,6 +112,10 @@ export default function HalaqahForm({
           <FormControl mt={4}>
             <FormLabel>Kode</FormLabel>
             <Input value={code} onChange={(e) => setCode(e.target.value)} />
+          </FormControl>
+          <FormControl mt={4}>
+            <FormLabel>Kode Pengawas</FormLabel>
+            <Input value={code_pengawas} onChange={(e) => setCodePengawas(e.target.value)} />
           </FormControl>
         </ModalBody>
         <ModalFooter>
