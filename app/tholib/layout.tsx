@@ -17,7 +17,7 @@ export default function TholibLayout({ children }: { children: React.ReactNode }
 
   return (
     <Box minH="100vh" pt="60px" pb="60px">
-      <Header title={title} />
+      {/* <Header title={title} /> */}
       {children}
       <BottomNav />
     </Box>
