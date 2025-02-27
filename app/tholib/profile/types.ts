@@ -3,6 +3,5 @@ export type TholibProfile = {
     name: string;
     email: string;
     phone: string;
-    halaqahName: string;
-    halaqahCode: string;
+    role: string;
   };
