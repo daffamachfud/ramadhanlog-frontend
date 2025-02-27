@@ -28,18 +28,36 @@ export default function RegisterPage() {
     }
 
     try {
+      const formattedRole = role.toLowerCase(); 
+
       const res = await fetch(api.register, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role, halaqahCode }), // Perbaiki request body
+        body: JSON.stringify({ name, email, password, role: formattedRole, halaqahCode}),
       });
-      console.log("response register : ",res)
-      if (!res.ok) throw new Error("Registrasi gagal");
-
+    
+      console.log("Response Status:", res.status); // Debug status HTTP
+    
+      let data;
+      try {
+        data = await res.json(); // Coba parsing JSON
+      } catch (jsonError) {
+        console.error("JSON Parsing Error:", jsonError);
+        throw new Error("Server memberikan respons yang tidak valid");
+      }
+    
+      console.log("Response Data:", data); // Debug data response
+    
+      if (!res.ok) {
+        throw new Error(data.message || `Registrasi gagal (Error ${res.status})`);
+      }
+    
+      console.log("Registrasi berhasil:", data);
       router.push("/auth/login");
     } catch (err) {
-      console.log("error register : ",err)
-      setError("Registrasi gagal, coba lagi.");
+      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan yang tahu hanya Allah dan yang buat web";
+      console.error("Error saat registrasi:", errorMessage);
+      setError(errorMessage);
     }
   };
 
@@ -64,8 +82,8 @@ export default function RegisterPage() {
           <FormControl isRequired>
             <FormLabel>Role</FormLabel>
             <Select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="tholib">Tholib</option>
               <option value="murabbi">Murabbi</option>
+              <option value="tholib">Tholib</option>
             </Select>
           </FormControl>
           {role === "tholib" && (

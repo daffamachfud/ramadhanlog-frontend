@@ -11,9 +11,16 @@ export const api = {
   dashboardTholib: `${API_URL}/dashboard/tholib`,
   halaqahMurabbi: `${API_URL}/halaqah/murabbi`,
   addHalaqah: `${API_URL}/halaqah/add`,
+
   getLaporanTholib: `${API_URL}/laporan-tholib/`,
+  getLaporanTholibByPengawas: `${API_URL}/laporan-tholib/pengawas`,
   getLaporanTholibDetail: `${API_URL}/laporan-tholib/detail`,
+
   getMurabbiReported: `${API_URL}/dashboard/murabbi/reported`,
   getMurabbiUnreported: `${API_URL}/dashboard/murabbi/unreported`,
+
+  dashboardPengawas: `${API_URL}/dashboard/pengawas`,
+  getPengawasReported: `${API_URL}/dashboard/pengawas/reported`,
+  getPengawasUnreported: `${API_URL}/dashboard/pengawas/unreported`,
 
 };
