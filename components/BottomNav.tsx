@@ -17,12 +17,22 @@ const bottomNavItems = {
     { label: "Laporan", icon: <BarChart size={20} />, path: "/murabbi/laporan-tholib" },
     { label: "Profile", icon: <User size={20} />, path: "/murabbi/profile" },
   ],
+  pengawas: [
+    { label: "Dashboard", icon: <Home size={20} />, path: "/pengawas" }, // Sama dengan Murabbi
+    { label: "Catat", icon: <BookOpen size={20} />, path: "/pengawas/catat-amalan" }, // Sama dengan Tholib
+    { label: "Laporan", icon: <BarChart size={20} />, path: "/pengawas/laporan-tholib" }, // Sama dengan Murabbi
+    { label: "Profile", icon: <User size={20} />, path: "/pengawas/profile" }, // Sama dengan Murabbi
+  ],
 };
 
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const role = pathname.startsWith("/tholib") ? "tholib" : "murabbi";
+  const role = pathname.startsWith("/tholib")
+  ? "tholib"
+  : pathname.startsWith("/murabbi")
+  ? "murabbi"
+  : "pengawas";
 
   return (
     <Box

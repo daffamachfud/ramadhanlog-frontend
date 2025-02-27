@@ -29,7 +29,7 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
-
+      
       if (!res.ok) {
         throw new Error(data.message || "Login gagal, periksa kembali kredensial Anda.");
       }
@@ -40,15 +40,17 @@ export default function LoginPage() {
         path: "/",
       });
 
-      setCookie(null, "role", data.role, {
+      setCookie(null, "role", data.user.role, {
         maxAge: 60 * 60 * 24,
         path: "/",
       });
 
       // Redirect ke dashboard setelah login
-      if (data.role === "murabbi") {
+      if (data.user.role === "murabbi") {
         router.push("/murabbi");
-      } else {
+      } else if ( data.user.role === "pengawas"){
+        router.push("/pengawas");
+      }else {
         router.push("/tholib");
       }
     } catch (err) {

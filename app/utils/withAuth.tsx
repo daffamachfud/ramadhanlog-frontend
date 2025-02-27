@@ -7,7 +7,7 @@ import {jwtDecode} from "jwt-decode";
 
 interface DecodedToken {
   id: string;
-  role: "murabbi" | "tholib"; // Sesuaikan dengan role yang ada
+  role: "murabbi" |"pengawas"| "tholib"; // Sesuaikan dengan role yang ada
 }
 
 export default function withAuth(WrappedComponent: React.FC, allowedRoles: string[]) {
@@ -27,8 +27,15 @@ export default function withAuth(WrappedComponent: React.FC, allowedRoles: strin
         setRole(decoded.role);
 
         if (!allowedRoles.includes(decoded.role)) {
-          router.push(decoded.role === "murabbi" ? "/murabbi" : "/tholib"); // Redirect ke halaman sesuai role
+          if (decoded.role === "murabbi") {
+            router.push("/murabbi");
+          } else if (decoded.role === "pengawas") {
+            router.push("/pengawas");
+          } else {
+            router.push("/tholib");
+          }
         }
+        
       } catch (error) {
         console.error("Invalid token:", error);
         router.push("/auth/login");
