@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Box, Spinner, Heading, Button, VStack } from "@chakra-ui/react";
-import { getTholibProfile } from "./profileService";
 import { TholibProfile } from "./types";
 import ProfileCard from "./ProfileCard";
 import ProfileForm from "./ProfileForm";
+import { api } from "@/lib/api";
+import { parseCookies } from "nookies";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<TholibProfile | null>(null);
@@ -15,7 +16,19 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const data = await getTholibProfile();
+        const cookies = parseCookies();
+        const token = cookies.token;
+        if (!token) return;
+
+        const response = await fetch(api.getProfile, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        const data = await response.json();
         setProfile(data);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -36,16 +49,20 @@ export default function ProfilePage() {
 
   return (
     <Box p={6}>
-      <Heading mb={4}>Edit Profil Tholib</Heading>
+      <Heading mb={4}>Profil Tholib</Heading>
       <VStack spacing={4} align="start">
         {isEditing ? (
-          <ProfileForm profile={profile!} onClose={() => setIsEditing(false)} setProfile={setProfile} />
+          <ProfileForm
+            profile={profile!}
+            onClose={() => setIsEditing(false)}
+            setProfile={setProfile}
+          />
         ) : (
           <>
             <ProfileCard profile={profile!} />
-            <Button colorScheme="blue" onClick={() => setIsEditing(true)}>
+            {/* <Button colorScheme="blue" onClick={() => setIsEditing(true)}>
               Edit Profil
-            </Button>
+            </Button> */}
           </>
         )}
       </VStack>

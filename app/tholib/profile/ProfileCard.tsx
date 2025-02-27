@@ -6,8 +6,7 @@ export default function ProfileCard({ profile }: { profile: TholibProfile }) {
     <Box borderWidth="1px" borderRadius="lg" p={4} w="100%">
       <Text fontSize="lg" fontWeight="bold">{profile.name}</Text>
       <Text>Email: {profile.email}</Text>
-      <Text>Telepon: {profile.phone}</Text>
-      <Text>Halaqah: {profile.halaqahName} ({profile.halaqahCode})</Text>
+      <Text>Role: {profile.role}</Text>
     </Box>
   );
 }
