@@ -2,9 +2,24 @@
 
 import { Box, Button, Heading, Text, VStack, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
+import { parseCookies } from "nookies";
+import { useEffect } from "react";
 
 export default function Home() {
   const router = useRouter();
+
+  useEffect(() => {
+    const cookies = parseCookies();
+    const token = cookies.token;
+    const role = cookies.role; // Ambil role dari cookie
+
+    if (token && role) {
+      // Redirect ke dashboard sesuai role
+      if (role === "murabbi") router.push("/murabbi");
+      else if (role === "tholib") router.push("/tholib");
+      else if (role === "pengawas") router.push("/pengawas");
+    }
+  }, [router]);
 
   return (
     <Box minH="100vh" display="flex" flexDirection="column" justifyContent="space-between" bg="gray.100">
