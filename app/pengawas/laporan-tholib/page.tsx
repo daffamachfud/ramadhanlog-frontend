@@ -11,13 +11,13 @@ export default function LaporanTholibPage() {
   const [laporan, setLaporan] = useState<LaporanTholib[]>([]);
   const [filteredLaporan, setFilteredLaporan] = useState<LaporanTholib[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [filters, setFilters] = useState({ nama: "", halaqah: "" });
+  const [filters, setFilters] = useState({ nama: ""});
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       try {
-        const data = await fetchLaporanTholib(filters.nama, filters.halaqah);
+        const data = await fetchLaporanTholib(filters.nama);
         setLaporan(data);
         setFilteredLaporan(data);
       } catch (error) {
