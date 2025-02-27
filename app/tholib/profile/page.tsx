@@ -6,12 +6,23 @@ import { TholibProfile } from "./types";
 import ProfileCard from "./ProfileCard";
 import ProfileForm from "./ProfileForm";
 import { api } from "@/lib/api";
-import { parseCookies } from "nookies";
+import { parseCookies, destroyCookie } from "nookies";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<TholibProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Hapus token dari cookie
+    destroyCookie(null, "token");
+
+    // Redirect ke halaman login
+    router.push("/auth/login");
+  };
 
   useEffect(() => {
     async function fetchProfile() {
@@ -60,9 +71,9 @@ export default function ProfilePage() {
         ) : (
           <>
             <ProfileCard profile={profile!} />
-            {/* <Button colorScheme="blue" onClick={() => setIsEditing(true)}>
-              Edit Profil
-            </Button> */}
+            <Button colorScheme="blue" onClick={handleLogout}>
+              Logout
+            </Button>
           </>
         )}
       </VStack>

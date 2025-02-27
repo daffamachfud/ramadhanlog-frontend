@@ -22,6 +22,8 @@ import withAuth from "@/app/utils/withAuth";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
+import moment from "moment-hijri";
+import { useRouter } from "next/navigation"; // Import Next.js router
 
 const formatTilawah = (value: number): string => {
   const fractionMap: Record<number, string> = {
@@ -44,7 +46,25 @@ const formatTilawah = (value: number): string => {
   return fractionMap[roundedValue] || `${roundedValue} Juz`;
 };
 
+moment.locale("en");
+
+// Format tanggal Hijriah dengan nama bulan dalam huruf Latin
+const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
+
+// Fungsi untuk mendapatkan tanggal dalam format "Senin, 26 Februari 2025"
+const getFormattedDate = (): string => {
+  const today = new Date();
+  return new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(today);
+};
+
 const DashboardMurabbi = () => {
+  const router = useRouter(); // Inisialisasi router
+
   const [dashboardData, setDashboardData] = useState<{
     totalTholib: number;
     reportedTholib: number;
@@ -58,6 +78,11 @@ const DashboardMurabbi = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const goToDetail = (id: number, name: string) => {
+    const encodedName = encodeURIComponent(name); // Encode nama untuk URL
+    router.push(`/murabbi/sudah-laporan/${id}?name=${encodedName}`);
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -119,14 +144,30 @@ const DashboardMurabbi = () => {
 
   return (
     <Box p={6}>
-      <Heading mb={4}>Dashboard Murabbi</Heading>
+      {/* <Heading mb={4}>Dashboard Murabbi</Heading> */}
+
+      {/* Tanggal Hari Ini */}
+      <Text fontSize="md" fontWeight="bold" mb={2} textAlign="center">
+        📅 {hijriDate}
+      </Text>
+      <Text fontSize="small" fontWeight="bold" mb={3} textAlign="center">
+        {getFormattedDate()}
+      </Text>
 
       {/* Ringkasan Laporan */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-        <Card bg="green.100">
-          <CardBody>
+        <Card
+          bg="green.100"
+          cursor="pointer"
+          onClick={() => router.push("/murabbi/sudah-laporan")} // Navigasi ke halaman baru
+        >
+          <CardBody
+            display="flex"
+            flexDirection="column"
+            justifyContent="space-between"
+          >
             <Stat>
-              <StatLabel>Tholib Sudah Laporan</StatLabel>
+              <StatLabel>Total Sudah Laporan</StatLabel>
               <StatNumber>{dashboardData.reportedTholib}</StatNumber>
               <StatHelpText>
                 <StatArrow type="increase" />
@@ -137,33 +178,43 @@ const DashboardMurabbi = () => {
                 %
               </StatHelpText>
             </Stat>
+            <Text fontSize="sm" textAlign="right" cursor="pointer">
+              Lihat Detail
+            </Text>
           </CardBody>
         </Card>
 
-        <Card bg="purple.100">
+        {/* <Card bg="purple.100">
           <CardBody>
             <Stat>
               <StatLabel>Rata-rata Tilawah</StatLabel>
               <StatNumber>{formatTilawah(dashboardData.avgTilawah)}</StatNumber>
             </Stat>
           </CardBody>
-        </Card>
+        </Card> */}
 
-        <Card bg="red.100">
+        <Card
+          bg="red.100"
+          cursor="pointer"
+          onClick={() => router.push("/murabbi/belum-laporan")} // Navigasi ke halaman baru
+        >
           <CardBody>
             <Stat>
-              <StatLabel>Tholib Belum Laporan</StatLabel>
+              <StatLabel>Total Belum Laporan</StatLabel>
               <StatNumber>
                 {dashboardData.totalTholib - dashboardData.reportedTholib}
               </StatNumber>
             </Stat>
+            <Text fontSize="sm" textAlign="right" cursor="pointer">
+              Lihat Detail
+            </Text>
           </CardBody>
         </Card>
       </SimpleGrid>
 
       {/* Highlight Laporan Per Tholib */}
-      <Heading size="md" mt={6} mb={4}>
-        Highlight Laporan Tholib Hari Ini
+      <Heading size="sm" mt={6} mb={4}>
+        Highlight Laporan Hari Ini
       </Heading>
       <VStack align="stretch" spacing={4}>
         {dashboardData.tholibReports.length > 0 ? (
@@ -174,6 +225,9 @@ const DashboardMurabbi = () => {
               borderWidth="1px"
               borderRadius="md"
               boxShadow="md"
+              cursor="pointer"
+              _hover={{ bg: "gray.100" }} // Efek hover agar terlihat interaktif
+              onClick={() => goToDetail(tholib.id, tholib.name)}
             >
               <HStack justifyContent="space-between">
                 <Box>
@@ -188,7 +242,7 @@ const DashboardMurabbi = () => {
           ))
         ) : (
           <Text textAlign="center" color="gray.500">
-            Belum ada tholib yang laporan hari ini.
+            Belum ada yang laporan hari ini.
           </Text>
         )}
       </VStack>

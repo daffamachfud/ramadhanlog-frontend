@@ -13,4 +13,7 @@ export const api = {
   addHalaqah: `${API_URL}/halaqah/add`,
   getLaporanTholib: `${API_URL}/laporan-tholib/`,
   getLaporanTholibDetail: `${API_URL}/laporan-tholib/detail`,
+  getMurabbiReported: `${API_URL}/dashboard/murabbi/reported`,
+  getMurabbiUnreported: `${API_URL}/dashboard/murabbi/unreported`,
+
 };
