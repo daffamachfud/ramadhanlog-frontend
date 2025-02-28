@@ -13,9 +13,9 @@ import moment from "moment-hijri";
 const TholibDashboard = () => {
   // State untuk ringkasan amalan harian dan mingguan
   const [dailyData, setDailyData] = useState({
-    totalAmalan: 17,
+    totalAmalan: 20,
     completedAmalan: 0,
-  }); // Total 17 amalan
+  }); // Total 20 amalan
   const [loading, setLoading] = useState(true);
   // Data untuk chart mingguan
   const [chartData, setChartData] = useState<{ name: string; value: number }[]>(
@@ -55,7 +55,7 @@ const TholibDashboard = () => {
 
         // Update state dengan data dari backend
         setDailyData({
-          totalAmalan: 17, // Total tetap 17
+          totalAmalan: 20, // Total tetap 17
           completedAmalan: ringkasanHarian.completed,
         });
 
