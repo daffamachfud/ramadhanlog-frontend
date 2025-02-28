@@ -65,7 +65,7 @@ export default function CatatAmalanPage() {
           setLoading(false);
           return;
         }
-
+  
         const response = await fetch(api.getAmalanHarian, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -73,15 +73,14 @@ export default function CatatAmalanPage() {
           },
           credentials: "include",
         });
-
+  
         const data = await response.json();
-        console.log("hasil fecth : ", data.data);
         if (!data.success) throw new Error(data.message);
-
+  
         const parentIds = new Set(
           data.data.map((item: any) => item.parentId).filter(Boolean)
         );
-
+  
         setAmalan(
           data.data.map((item: any) => ({
             id: item.id,
@@ -89,12 +88,13 @@ export default function CatatAmalanPage() {
             description: item.description || "",
             type: item.type,
             options: item.options ? JSON.parse(item.options) : null,
-            parent_id: item.parent_id,
-            done: item.done || false,
-            item: item.nilai,
-            isParent: parentIds.has(item.id), // ✅ Amalan parent ditandai di sini
+            parent_id: item.parentId,
+            done: item.done, // ✅ Gunakan `done` dari backend
+            nilai: item.nilai, // ✅ Gunakan `nilai` dari backend
+            isParent: parentIds.has(item.id), // ✅ Identifikasi parent
           }))
         );
+  
         // ✅ Simpan nilai dropdown yang sudah dipilih sebelumnya
         const initialSelectedValues: { [key: string]: string } = {};
         data.data.forEach((item: any) => {
@@ -109,7 +109,7 @@ export default function CatatAmalanPage() {
         setLoading(false);
       }
     };
-
+  
     fetchAmalan();
   }, []);
 
@@ -146,10 +146,10 @@ export default function CatatAmalanPage() {
     }
 
     const selectedAmalanData = amalan
-      .filter((item) => item.done)
       .map((item) => ({
         id: item.id,
         nama: item.nama,
+        done: item.done, // ✅ Kirim status done agar backend tahu jika ada yang di-uncheck
         nilai: item.type === "dropdown" ? item.nilai || "" : "", // ✅ Kirim nilai yang tersimpan
       }));
 
