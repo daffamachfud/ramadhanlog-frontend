@@ -210,10 +210,10 @@ const PageSudahLaporan = () => {
               )
               .map((tholib) => {
                 const totalAmalan = parseInt(tholib.total_amalan, 10) || 0; // Pastikan angka
-                const maxAmalan = 17; // Batas maksimal amalan harian
+                const maxAmalan = 20; // Batas maksimal amalan harian
                 let bgColor = "red.100";
 
-                if (totalAmalan >= 13) {
+                if (totalAmalan >= 15) {
                   bgColor = "green.100"; // Baik
                 } else if (totalAmalan >= 6) {
                   bgColor = "yellow.100"; // Cukup
