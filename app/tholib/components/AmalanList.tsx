@@ -6,6 +6,7 @@ type AmalanListProps = {
 };
 
 const AmalanList: React.FC<AmalanListProps> = ({ items }) => {
+  console.log("hasil amalan list : ",items)
   return (
     <Box p={4} bg="white" borderRadius="lg" boxShadow="md">
       <Text fontSize="xl" fontWeight="bold" mb={4}>Daftar Amalan Harian</Text>

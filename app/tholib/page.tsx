@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { Box, VStack, SimpleGrid, Text } from "@chakra-ui/react";
 import DailySummary from "./components/DailySummary";
 import AmalanChart from "./components/AmalanChart";
-import AmalanList from "./components/AmalanList";
+import ReminderHadist from "./components/ReminderHadist";
 import withAuth from "@/app/utils/withAuth";
 import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
 import moment from "moment-hijri";
+import PrayerTimesHeader from "./components/PrayerTimesHeader";
 
 const TholibDashboard = () => {
   // State untuk ringkasan amalan harian dan mingguan
@@ -55,7 +56,7 @@ const TholibDashboard = () => {
 
         // Update state dengan data dari backend
         setDailyData({
-          totalAmalan: 20, // Total tetap 17
+          totalAmalan: 20, // Total tetap 20
           completedAmalan: ringkasanHarian.completed,
         });
 
@@ -90,27 +91,10 @@ const TholibDashboard = () => {
 
   // Format tanggal Hijriah dengan nama bulan dalam huruf Latin
   const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
-
-  // Fungsi untuk mendapatkan tanggal dalam format "Senin, 26 Februari 2025"
-  const getFormattedDate = (): string => {
-    const today = new Date();
-    return new Intl.DateTimeFormat("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(today);
-  };
-
   return (
     <Box p={6}>
-      <Text fontSize="md" fontWeight="bold" mb={2} textAlign="center">
-        📅 {hijriDate}
-      </Text>
-      <Text fontSize="small" fontWeight="bold" mb={3} textAlign="center">
-        {getFormattedDate()}
-      </Text>
-
+      <PrayerTimesHeader />
+  
       <VStack spacing={6} align="stretch">
         {/* Ringkasan Amalan Mingguan dan Harian */}
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
@@ -120,11 +104,11 @@ const TholibDashboard = () => {
           />
         </SimpleGrid>
 
+        {/* Reminder Hadis */}
+        <ReminderHadist amalanList={amalanList} />
+
         {/* Grafik Amalan Mingguan */}
         <AmalanChart data={chartData} />
-
-        {/* Daftar Amalan Harian */}
-        <AmalanList items={amalanList} />
       </VStack>
     </Box>
   );

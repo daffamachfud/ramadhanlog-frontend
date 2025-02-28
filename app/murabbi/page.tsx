@@ -23,6 +23,7 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
 import moment from "moment-hijri";
+import PrayerTimesHeader from "../tholib/components/PrayerTimesHeader";
 import { useRouter } from "next/navigation"; // Import Next.js router
 
 const formatTilawah = (value: number): string => {
@@ -146,13 +147,7 @@ const DashboardMurabbi = () => {
     <Box p={6}>
       {/* <Heading mb={4}>Dashboard Murabbi</Heading> */}
 
-      {/* Tanggal Hari Ini */}
-      <Text fontSize="md" fontWeight="bold" mb={2} textAlign="center">
-        📅 {hijriDate}
-      </Text>
-      <Text fontSize="small" fontWeight="bold" mb={3} textAlign="center">
-        {getFormattedDate()}
-      </Text>
+      <PrayerTimesHeader />
 
       {/* Ringkasan Laporan */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
