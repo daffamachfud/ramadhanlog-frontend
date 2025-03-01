@@ -47,13 +47,11 @@ export default function CatatAmalanPage() {
   const [selectedValues, setSelectedValues] = useState<{
     [key: string]: string;
   }>({}); // Untuk nilai dropdown
+  const [hijriDate, setHijriDate] = useState<string>("-");
   const toast = useToast();
   const cancelRef = useRef(null);
 
   moment.locale("en");
-
-  // Format tanggal Hijriah dengan nama bulan dalam huruf Latin
-  const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
 
   useEffect(() => {
     const fetchAmalan = async () => {
@@ -77,7 +75,8 @@ export default function CatatAmalanPage() {
         const data = await response.json();
         if (!data.success) throw new Error(data.message);
 
-        
+        console.log("hasil date:",data.hijriDate)
+        setHijriDate(data.hijriDate);
   
         const parentIds = new Set(
           data.data.map((item: any) => item.parentId).filter(Boolean)
