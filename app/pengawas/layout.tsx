@@ -4,6 +4,7 @@ import { Box } from "@chakra-ui/react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { usePathname } from "next/navigation";
+import WarningModal from "@/components/WarningModal"; 
 
 export default function MurabbiLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,6 +18,7 @@ export default function MurabbiLayout({ children }: { children: React.ReactNode 
 
   return (
     <Box minH="100vh" pt="4px" pb="80px">
+      <WarningModal/>
       {/* <Header title={title} /> */}
       {children}
       <BottomNav />
