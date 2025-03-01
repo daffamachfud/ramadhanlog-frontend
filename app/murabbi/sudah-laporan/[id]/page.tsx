@@ -17,6 +17,8 @@ import {
   HStack,
   IconButton,
   Heading,
+  VStack,
+  Badge,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { fetchDetailLaporanTholib } from "../../laporan-tholib/laporanTholibService";
@@ -104,46 +106,63 @@ export default function SudahLaporanDetail() {
             borderWidth="1px"
             borderRadius="md"
             boxShadow="md"
-            cursor="pointer"
-            _hover={{ bg: "gray.100" }}
           >
-            <HStack justifyContent="space-between">
-              <Box>
+            <HStack
+              justifyContent="space-between"
+              p={3}
+              borderWidth="1px"
+              borderRadius="md"
+            >
+              <VStack align="start" spacing={1}>
                 <Text fontWeight="bold" fontSize="sm">
                   {item.nama_amalan}
                 </Text>
-              </Box>
-              {item.type === "dropdown" ? (
-                <Text fontWeight="bold">
-                  {item.nilai === "" ? "-" : item.nilai}
+                <Text fontSize="xs" color="gray.600">
+                  {item.description}
                 </Text>
-              ) : (
-                <Text fontWeight="bold">{item.status ? "✅" : "❌"}</Text> // Menampilkan status sebagai ceklis
-              )}
+              </VStack>
+              <Box>
+                {item.type === "dropdown" ? (
+                  <Badge
+                    colorScheme={
+                      item.nilai == null || item.nilai === "" ? "red" : "blue"
+                    }
+                  >
+                    {item.nilai == null || item.nilai === ""
+                      ? "Belum"
+                      : item.nilai}
+                  </Badge>
+                ) : (
+                  <Badge colorScheme={item.status ? "green" : "red"}>
+                    {item.status ? "Selesai" : "Belum"}
+                  </Badge>
+                )}
+              </Box>
             </HStack>
           </Box>
         ))
       ) : (
         <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
       )}
-       {/* Modal Help */}
-            <Modal isOpen={isOpen} onClose={onClose}>
-              <ModalOverlay />
-              <ModalContent>
-                <ModalHeader>Informasi</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                  <Text>
-                    Daftar ini menampilkan detail amalan Tholib yang sudah dilakukan pada hari ini
-                  </Text>
-                </ModalBody>
-                <ModalFooter>
-                  <Button colorScheme="blue" onClick={onClose}>
-                    Mengerti
-                  </Button>
-                </ModalFooter>
-              </ModalContent>
-            </Modal>
+      {/* Modal Help */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Informasi</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>
+              Daftar ini menampilkan detail amalan Tholib yang sudah dilakukan
+              pada hari ini
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={onClose}>
+              Mengerti
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }
