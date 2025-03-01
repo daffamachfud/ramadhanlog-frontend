@@ -77,6 +77,20 @@ const DashboardMurabbi = () => {
     tholibReports: [],
     avgTilawah: 0,
   });
+
+  const [prayerTimes, setPrayerTimes] = useState<{
+    Subuh: string;
+    Dzuhur: string;
+    Ashar: string;
+    Maghrib: string;
+    Isya: string;
+  }>({
+    Subuh: "-",
+    Dzuhur: "-",
+    Ashar: "-",
+    Maghrib: "-",
+    Isya: "-",
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -113,6 +127,17 @@ const DashboardMurabbi = () => {
               nama_halaqah: t.nama_halaqah, // Pastikan nama halaqah sesuai alias
             })),
           });
+
+           // 🔹 Update waktu sholat jika tersedia
+           if (data.data.prayerTimes) {
+            setPrayerTimes({
+              Subuh: data.data.prayerTimes.Subuh || "-",
+              Dzuhur: data.data.prayerTimes.Dzuhur || "-",
+              Ashar: data.data.prayerTimes.Ashar || "-",
+              Maghrib: data.data.prayerTimes.Maghrib || "-",
+              Isya: data.data.prayerTimes.Isya || "-",
+            });
+          }
         } else {
           setError("Gagal mengambil data dashboard");
         }
@@ -147,7 +172,7 @@ const DashboardMurabbi = () => {
     <Box p={6}>
       {/* <Heading mb={4}>Dashboard Murabbi</Heading> */}
 
-      <PrayerTimesHeader />
+      <PrayerTimesHeader prayerTimes={prayerTimes}/>
 
       {/* Ringkasan Laporan */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>

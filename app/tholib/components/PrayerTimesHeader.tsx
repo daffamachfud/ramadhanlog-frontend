@@ -5,33 +5,28 @@ import { Box, Text, Flex, Skeleton, Icon } from "@chakra-ui/react";
 import { FaMapMarkerAlt } from "react-icons/fa"; // Ikon lokasi
 import moment from "moment-hijri";
 
-// API Waktu Sholat
-const PRAYER_API_URL = "https://api.aladhan.com/v1/timingsByCity";
-const CITY = "Bandung";
-const COUNTRY = "Indonesia";
+interface PrayerTimesProps {
+  prayerTimes: {
+    Subuh: string;
+    Dzuhur: string;
+    Ashar: string;
+    Maghrib: string;
+    Isya: string;
+  };
+}
 
-const PrayerTimesHeader = () => {
-  const [prayerTimes, setPrayerTimes] = useState<{ [key: string]: string }>({});
+// API Waktu Sholat
+const CITY = "Kota Bandung";
+
+const PrayerTimesHeader: React.FC<PrayerTimesProps> = ({ prayerTimes }) => {
   const [loading, setLoading] = useState(true);
 
+  // ✅ Perbaikan: Gunakan useEffect untuk mendeteksi perubahan `prayerTimes`
   useEffect(() => {
-    async function fetchPrayerTimes() {
-      try {
-        const response = await fetch(`${PRAYER_API_URL}?city=${CITY}&country=ID&method=2`);
-        const data = await response.json();
-
-        if (data.code === 200) {
-          setPrayerTimes(data.data.timings);
-        }
-      } catch (error) {
-        console.error("Gagal mengambil data waktu sholat:", error);
-      } finally {
-        setLoading(false);
-      }
+    if (prayerTimes && Object.values(prayerTimes).every((time) => time)) {
+      setLoading(false); // ✅ Set `loading` menjadi false setelah data tersedia
     }
-
-    fetchPrayerTimes();
-  }, []);
+  }, [prayerTimes]);
 
   // Format tanggal Hijriah
   const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
@@ -47,6 +42,8 @@ const PrayerTimesHeader = () => {
     }).format(today);
   };
 
+  console.log("Waktu data:", prayerTimes);
+
   return (
     <Box p={3} bg="blue.600" color="white" borderRadius="lg" boxShadow="md" mb={4}>
       {/* Baris 1: Lokasi dan Tanggal Hijriah & Masehi di Ujung Kanan */}
@@ -54,7 +51,7 @@ const PrayerTimesHeader = () => {
         {/* Lokasi */}
         <Flex align="center">
           <Icon as={FaMapMarkerAlt} boxSize={4} mr={2} />
-          <Text fontSize="sm" fontWeight="bold">{CITY}, {COUNTRY}</Text>
+          <Text fontSize="sm" fontWeight="bold">{CITY}</Text>
         </Flex>
 
         {/* Tanggal Hijriah & Masehi */}
@@ -70,13 +67,7 @@ const PrayerTimesHeader = () => {
           ? Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} height="20px" width="60px" />
             ))
-          : Object.entries({
-              Subuh: prayerTimes.Fajr,
-              Dzuhur: prayerTimes.Dhuhr,
-              Ashar: prayerTimes.Asr,
-              Maghrib: prayerTimes.Maghrib,
-              Isya: prayerTimes.Isha,
-            }).map(([name, time]) => (
+          : Object.entries(prayerTimes).map(([name, time]) => (
               <Box key={name} textAlign="center" minWidth="60px">
                 <Text fontSize="xs" fontWeight="bold">{name}</Text>
                 <Text fontSize="sm">{time}</Text>
