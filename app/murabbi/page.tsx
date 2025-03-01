@@ -26,42 +26,7 @@ import moment from "moment-hijri";
 import PrayerTimesHeader from "../tholib/components/PrayerTimesHeader";
 import { useRouter } from "next/navigation"; // Import Next.js router
 
-const formatTilawah = (value: number): string => {
-  const fractionMap: Record<number, string> = {
-    0.1: "Sepersepuluh Juz",
-    0.2: "Seperlima Juz",
-    0.25: "Seperempat Juz",
-    0.3: "Tiga Persepuluh Juz",
-    0.33: "Sepertiga Juz",
-    0.4: "Dua Perlima Juz",
-    0.5: "Setengah Juz",
-    0.6: "Tiga Perlima Juz",
-    0.66: "Dua Pertiga Juz",
-    0.75: "Tiga Perempat Juz",
-    0.8: "Empat Perlima Juz",
-    0.9: "Sembilan Persepuluh Juz",
-  };
-
-  if (Number.isInteger(value)) return `${value} Juz`;
-  const roundedValue = parseFloat(value.toFixed(2)); // Dibulatkan ke 2 angka desimal untuk pencocokan
-  return fractionMap[roundedValue] || `${roundedValue} Juz`;
-};
-
 moment.locale("en");
-
-// Format tanggal Hijriah dengan nama bulan dalam huruf Latin
-const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
-
-// Fungsi untuk mendapatkan tanggal dalam format "Senin, 26 Februari 2025"
-const getFormattedDate = (): string => {
-  const today = new Date();
-  return new Intl.DateTimeFormat("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(today);
-};
 
 const DashboardMurabbi = () => {
   const router = useRouter(); // Inisialisasi router
