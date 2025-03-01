@@ -8,6 +8,7 @@ export interface DetailLaporanTholib {
   id: number;
   tanggal: string;
   nama_amalan: string;
+  description: string;
   status: string;
   nilai: string;
   type: string;

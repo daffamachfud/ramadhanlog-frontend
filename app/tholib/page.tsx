@@ -14,9 +14,9 @@ import PrayerTimesHeader from "./components/PrayerTimesHeader";
 const TholibDashboard = () => {
   // State untuk ringkasan amalan harian dan mingguan
   const [dailyData, setDailyData] = useState({
-    totalAmalan: 20,
+    totalAmalan: 21,
     completedAmalan: 0,
-  }); // Total 20 amalan
+  }); // Total 21 amalan
   const [loading, setLoading] = useState(true);
   // Data untuk chart mingguan
   const [chartData, setChartData] = useState<{ name: string; value: number }[]>(
@@ -72,7 +72,7 @@ const TholibDashboard = () => {
 
         // Update state dengan data dari backend
         setDailyData({
-          totalAmalan: 20, // Total tetap 20
+          totalAmalan: 21, // Total tetap 21
           completedAmalan: ringkasanHarian.completed,
         });
 

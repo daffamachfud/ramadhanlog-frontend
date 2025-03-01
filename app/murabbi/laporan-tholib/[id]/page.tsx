@@ -1,8 +1,16 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { 
-  Box, Spinner, Text, Button, Input, FormControl, FormLabel, 
-  HStack
+import {
+  Box,
+  Spinner,
+  Text,
+  Button,
+  Input,
+  FormControl,
+  FormLabel,
+  HStack,
+  VStack,
+  Badge,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { fetchDetailLaporanTholib } from "../laporanTholibService";
@@ -20,12 +28,15 @@ export default function LaporanTholibDetail() {
 
   // Fetch data ketika id atau tanggal berubah
   useEffect(() => {
-    if (!id || !selectedDate) return; 
+    if (!id || !selectedDate) return;
 
     async function loadData() {
       try {
         console.log("Fetching data for ID:", id, "and Date:", selectedDate);
-        const response = await fetchDetailLaporanTholib(id.toString(), selectedDate);
+        const response = await fetchDetailLaporanTholib(
+          id.toString(),
+          selectedDate
+        );
         console.log("Response data:", response);
 
         if (response && response.data) {
@@ -59,40 +70,58 @@ export default function LaporanTholibDetail() {
         />
       </FormControl>
 
-      <Box mt={8}> {/* Menambahkan margin top */}
-              {loading ? (
-                <Spinner size="lg" mt={4} />
-              ) : detailLaporan.length > 0 ? (
-                detailLaporan.map((item) => (
-                  <Box
-                    key={item.id}
-                    p={4}
-                    borderWidth="1px"
-                    borderRadius="md"
-                    boxShadow="md"
-                    cursor="pointer"
-                    _hover={{ bg: "gray.100" }}
-                  >
-                    <HStack justifyContent="space-between">
-                      <Box>
-                        <Text fontWeight="bold" fontSize="sm">
-                          {item.nama_amalan}
-                        </Text>
-                      </Box>
-                      {item.type === "dropdown" ? (
-                        <Text fontWeight="bold">
-                          {item.nilai === "" ? "-" : item.nilai}
-                        </Text>
-                      ) : (
-                        <Text fontWeight="bold">{item.status ? "✅" : "❌"}</Text> // Menampilkan status sebagai ceklis
-                      )}
-                    </HStack>
-                  </Box>
-                ))
-              ) : (
-                <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
-              )}
+      <Box mt={8}>
+        {" "}
+        {/* Menambahkan margin top */}
+        {loading ? (
+          <Spinner size="lg" mt={4} />
+        ) : detailLaporan.length > 0 ? (
+          detailLaporan.map((item) => (
+            <Box
+              key={item.id}
+              p={4}
+              borderWidth="1px"
+              borderRadius="md"
+              boxShadow="md"
+            >
+              <HStack
+                justifyContent="space-between"
+                p={3}
+                borderWidth="1px"
+                borderRadius="md"
+              >
+                <VStack align="start" spacing={1}>
+                  <Text fontWeight="bold" fontSize="sm">
+                    {item.nama_amalan}
+                  </Text>
+                  <Text fontSize="xs" color="gray.600">
+                    {item.description}
+                  </Text>
+                </VStack>
+                <Box>
+                  {item.type === "dropdown" ? (
+                    <Badge
+                      colorScheme={
+                        item.nilai == null || item.nilai === "" ? "red" : "blue"
+                      }
+                    >
+                      {item.nilai == null || item.nilai === ""
+                        ? "Belum"
+                        : item.nilai}
+                    </Badge>
+                  ) : (
+                    <Badge colorScheme={item.status ? "green" : "red"}>
+                      {item.status ? "Selesai" : "Belum"}
+                    </Badge>
+                  )}
+                </Box>
+              </HStack>
             </Box>
+          ))
+        ) : (
+          <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
+        )}
+      </Box>
     </Box>
   );
 }
