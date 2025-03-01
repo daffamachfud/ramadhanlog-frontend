@@ -23,13 +23,13 @@ const WarningModal = () => {
         p={4} // 🔹 Padding agar tidak terlalu mepet
         borderRadius="md" // 🔹 Tambahkan border radius agar tidak terlalu kaku
       >
-        <ModalHeader>⚠️ Pemberitahuan Penting</ModalHeader>
+        <ModalHeader>⚠️ Pemberitahuan Penting ⚠️</ModalHeader>
         <ModalBody>
           <Text fontSize="md">
-            Terjadi kesalahan pergantian hari pencatatan amalan. Jika merasa sudah input amalan tetapi catatan hilang, silakan input ulang saja.
+            Sistem sekarang sudah menerapkan batas waktu submit amalan di waktu magrib.
           </Text>
           <Text fontSize="sm" mt={2} fontStyle="italic" color="gray.600">
-            Kami sedang memperbaiki sistem agar pergantian hari mengikuti matahari terbenam. Syukron.
+          Jadi nanti jika sudah masuk magrib, pada halaman catatan amalan akan di reset.
           </Text>
         </ModalBody>
         <ModalFooter>
