@@ -84,12 +84,14 @@ const DashboardMurabbi = () => {
     Ashar: string;
     Maghrib: string;
     Isya: string;
+    HijriDate: string;
   }>({
     Subuh: "-",
     Dzuhur: "-",
     Ashar: "-",
     Maghrib: "-",
     Isya: "-",
+    HijriDate: "-"
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -136,6 +138,7 @@ const DashboardMurabbi = () => {
               Ashar: data.data.prayerTimes.Ashar || "-",
               Maghrib: data.data.prayerTimes.Maghrib || "-",
               Isya: data.data.prayerTimes.Isya || "-",
+              HijriDate: data.data.prayerTimes.HijriDate || "-"
             });
           }
         } else {

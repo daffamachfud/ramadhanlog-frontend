@@ -6,15 +6,14 @@ import {
   Spinner,
   Text,
   Button,
-  Input,
-  FormLabel,
   useDisclosure,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
   HStack,
   IconButton,
   Heading,
@@ -70,14 +69,14 @@ export default function SudahLaporanDetail() {
   return (
     <Box p={4} borderWidth={1} borderRadius="lg" mt={4}>
       {/* Tombol Kembali */}
-      <HStack spacing={3} justify="space-between" align="center" mb={4}>
+      <HStack spacing={3} justify="space" align="center" mb={4}>
         <IconButton
           icon={<ArrowBackIcon />}
           aria-label="Kembali"
           onClick={() => router.back()}
           colorScheme="blue"
           variant="ghost"
-          size="sm"
+          size="md"
         />
         <Box textAlign="center" flex="1">
           <Heading size="md">{name}</Heading>
@@ -91,34 +90,60 @@ export default function SudahLaporanDetail() {
           onClick={onOpen}
           colorScheme="gray"
           variant="ghost"
-          size="sm"
+          size="md"
         />
       </HStack>
 
       {loading ? (
         <Spinner size="lg" mt={4} />
       ) : detailLaporan.length > 0 ? (
-        <Table variant="simple" mt={4} size="sm">
-          <Thead>
-            <Tr>
-              <Th>No</Th>
-              <Th>Nama Amalan</Th>
-              <Th>Status</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {detailLaporan.map((item, index) => (
-              <Tr key={item.id}>
-                <Td>{index + 1}</Td>
-                <Td>{item.nama_amalan}</Td>
-                <Td>{item.status ? "✅" : "❌"}</Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
+        detailLaporan.map((item) => (
+          <Box
+            key={item.id}
+            p={4}
+            borderWidth="1px"
+            borderRadius="md"
+            boxShadow="md"
+            cursor="pointer"
+            _hover={{ bg: "gray.100" }}
+          >
+            <HStack justifyContent="space-between">
+              <Box>
+                <Text fontWeight="bold" fontSize="sm">
+                  {item.nama_amalan}
+                </Text>
+              </Box>
+              {item.type === "dropdown" ? (
+                <Text fontWeight="bold">
+                  {item.nilai === "" ? "-" : item.nilai}
+                </Text>
+              ) : (
+                <Text fontWeight="bold">{item.status ? "✅" : "❌"}</Text> // Menampilkan status sebagai ceklis
+              )}
+            </HStack>
+          </Box>
+        ))
       ) : (
         <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
       )}
+       {/* Modal Help */}
+            <Modal isOpen={isOpen} onClose={onClose}>
+              <ModalOverlay />
+              <ModalContent>
+                <ModalHeader>Informasi</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                  <Text>
+                    Daftar ini menampilkan detail amalan Tholib yang sudah dilakukan pada hari ini
+                  </Text>
+                </ModalBody>
+                <ModalFooter>
+                  <Button colorScheme="blue" onClick={onClose}>
+                    Mengerti
+                  </Button>
+                </ModalFooter>
+              </ModalContent>
+            </Modal>
     </Box>
   );
 }

@@ -1,8 +1,14 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { 
-  Box, Spinner, Text, Button, Input, FormControl, FormLabel, 
-  Table, Thead, Tbody, Tr, Th, Td 
+import {
+  Box,
+  Spinner,
+  Text,
+  Button,
+  Input,
+  FormControl,
+  FormLabel,
+  HStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { fetchDetailLaporanTholib } from "../laporanTholibService";
@@ -20,12 +26,15 @@ export default function LaporanTholibDetail() {
 
   // Fetch data ketika id atau tanggal berubah
   useEffect(() => {
-    if (!id || !selectedDate) return; 
+    if (!id || !selectedDate) return;
 
     async function loadData() {
       try {
         console.log("Fetching data for ID:", id, "and Date:", selectedDate);
-        const response = await fetchDetailLaporanTholib(id.toString(), selectedDate);
+        const response = await fetchDetailLaporanTholib(
+          id.toString(),
+          selectedDate
+        );
         console.log("Response data:", response);
 
         if (response && response.data) {
@@ -45,11 +54,10 @@ export default function LaporanTholibDetail() {
   return (
     <Box p={4} borderWidth={1} borderRadius="lg" mt={4}>
       {/* Tombol Kembali */}
+
       <Button colorScheme="gray" size="sm" onClick={() => router.back()} mb={4}>
         ← Kembali
       </Button>
-
-      <Text fontSize="xl" fontWeight="bold">Detail Laporan Tholib</Text>
 
       {/* Form Input Tanggal */}
       <FormControl mt={4}>
@@ -61,30 +69,41 @@ export default function LaporanTholibDetail() {
         />
       </FormControl>
 
-      {loading ? (
-        <Spinner size="lg" mt={4} />
-      ) : detailLaporan.length > 0 ? (
-        <Table variant="simple" mt={4} size="sm">
-          <Thead>
-            <Tr>
-              <Th>No</Th>
-              <Th>Nama Amalan</Th>
-              <Th>Status</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {detailLaporan.map((item, index) => (
-              <Tr key={item.id}>
-                <Td>{index + 1}</Td>
-                <Td>{item.nama_amalan}</Td>
-                <Td>{item.status ? "✅" : "❌"}</Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      ) : (
-        <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
-      )}
+      {/* Daftar Data Amalan */}
+      <Box mt={8}> {/* Menambahkan margin top */}
+        {loading ? (
+          <Spinner size="lg" mt={4} />
+        ) : detailLaporan.length > 0 ? (
+          detailLaporan.map((item) => (
+            <Box
+              key={item.id}
+              p={4}
+              borderWidth="1px"
+              borderRadius="md"
+              boxShadow="md"
+              cursor="pointer"
+              _hover={{ bg: "gray.100" }}
+            >
+              <HStack justifyContent="space-between">
+                <Box>
+                  <Text fontWeight="bold" fontSize="sm">
+                    {item.nama_amalan}
+                  </Text>
+                </Box>
+                {item.type === "dropdown" ? (
+                  <Text fontWeight="bold">
+                    {item.nilai === "" ? "-" : item.nilai}
+                  </Text>
+                ) : (
+                  <Text fontWeight="bold">{item.status ? "✅" : "❌"}</Text> // Menampilkan status sebagai ceklis
+                )}
+              </HStack>
+            </Box>
+          ))
+        ) : (
+          <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
+        )}
+      </Box>
     </Box>
   );
 }
