@@ -22,7 +22,7 @@ const AmalanChart: React.FC<AmalanChartProps> = ({ data }) => {
           {/* X-Axis: Menampilkan semua label */}
           <XAxis 
             dataKey="name" 
-            tick={{ fontSize: 12, fill: "#555" }} 
+            tick={{ fontSize: 6, fill: "#555" }} 
             axisLine={false} 
             tickLine={false} 
             interval={0} // ✅ Pastikan semua label muncul

@@ -20,10 +20,19 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  useDisclosure
 } from "@chakra-ui/react";
 import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
 import moment from "moment-hijri";
+import { FaCalendarAlt, FaQuestionCircle } from "react-icons/fa";
 
 interface Amalan {
   id: string;
@@ -48,8 +57,12 @@ export default function CatatAmalanPage() {
     [key: string]: string;
   }>({}); // Untuk nilai dropdown
   const [hijriDate, setHijriDate] = useState<string>("-");
+  const [hijriDates, setHijriDates] = useState<{ hijri: string; masehi: string }[]>([]);
+  const [selectedHijriDate, setSelectedHijriDate] = useState<string>("");
+  const [selectedMasehiDate, setSelectedMasehiDate] = useState<string>("");
   const toast = useToast();
   const cancelRef = useRef(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   moment.locale("en");
 
@@ -64,23 +77,54 @@ export default function CatatAmalanPage() {
           return;
         }
   
-        const response = await fetch(api.getAmalanHarian, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
+        // ✅ Ambil data dari backend berdasarkan tanggal Hijriah yang dipilih
+        const response = await fetch(
+          `${api.getAmalanHarian}${selectedHijriDate ? `?hijriDate=${selectedHijriDate}` : ""}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
   
         const data = await response.json();
         if (!data.success) throw new Error(data.message);
-
-        console.log("hasil date:",data.hijriDate)
-        setHijriDate(data.hijriDate);
   
-        const parentIds = new Set(
-          data.data.map((item: any) => item.parentId).filter(Boolean)
-        );
+        console.log("📅 Data hijriDate yang diterima:", data.hijriDate);
+  
+        // ✅ Pastikan semua tanggal tetap ada dan hanya tambahkan yang baru
+        setHijriDates((prevHijriDates) => {
+          const maxHijriDate = parseInt(data.hijriDate.split(" ")[0]); // Ambil angka tanggal
+          const hijriMonth = data.hijriDate.split(" ")[1]; // Bulan Hijriah
+          const hijriYear = data.hijriDate.split(" ")[2]; // Tahun Hijriah
+          
+          const newDates = [];
+          for (let i = 1; i <= maxHijriDate; i++) {
+            const hijriString = `${i} ${hijriMonth} ${hijriYear}`;
+            const masehiDate = moment(hijriString, "iD iMMMM iYYYY").format("YYYY-MM-DD");
+  
+            // ✅ Hanya tambahkan jika belum ada di daftar
+            if (!prevHijriDates.some((date) => date.hijri === hijriString)) {
+              newDates.push({ hijri: hijriString, masehi: masehiDate });
+            }
+          }
+  
+          return [...prevHijriDates, ...newDates].sort((a, b) => 
+            parseInt(a.hijri.split(" ")[0]) - parseInt(b.hijri.split(" ")[0])
+          );
+        });
+  
+        // ✅ Set default tanggal hanya jika belum ada pilihan
+        if (!selectedHijriDate) {
+          setSelectedHijriDate(data.hijriDate);
+          const masehiDate = moment(data.hijriDate, "iD iMMMM iYYYY").format("YYYY-MM-DD");
+          setSelectedMasehiDate(masehiDate);
+        }
+  
+        // ✅ Update daftar amalan
+        const parentIds = new Set(data.data.map((item: any) => item.parentId).filter(Boolean));
   
         setAmalan(
           data.data.map((item: any) => ({
@@ -90,9 +134,9 @@ export default function CatatAmalanPage() {
             type: item.type,
             options: item.options ? JSON.parse(item.options) : null,
             parent_id: item.parentId,
-            done: item.done, // ✅ Gunakan `done` dari backend
-            nilai: item.nilai, // ✅ Gunakan `nilai` dari backend
-            isParent: parentIds.has(item.id), // ✅ Identifikasi parent
+            done: item.done,
+            nilai: item.nilai,
+            isParent: parentIds.has(item.id),
           }))
         );
   
@@ -104,6 +148,7 @@ export default function CatatAmalanPage() {
           }
         });
         setSelectedValues(initialSelectedValues);
+  
       } catch (err) {
         setError("Gagal mengambil daftar amalan");
       } finally {
@@ -112,7 +157,11 @@ export default function CatatAmalanPage() {
     };
   
     fetchAmalan();
-  }, []);
+
+    setSelectedAmalan([]); // Reset checklist setiap tanggal berubah
+  setSelectedValues({}); // Reset nilai dropdown juga
+  }, [selectedHijriDate]);  
+    
 
   const toggleChecklist = (index: number) => {
     const updatedAmalan = [...amalan];
@@ -173,7 +222,10 @@ export default function CatatAmalanPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ amalan: selectedAmalanData }),
+        body: JSON.stringify({
+          amalan: selectedAmalanData,
+          hijriDate: selectedHijriDate,
+        }),
       });
 
       const result = await response.json();
@@ -214,12 +266,40 @@ export default function CatatAmalanPage() {
         boxShadow="md"
         borderRadius="md"
       >
-        <Heading size="md" mb={4} textAlign="center">
-          Catat Amalan Harian
-        </Heading>
-        <Text fontSize="md" fontWeight="bold" mb={2} textAlign="center">
-          📅 {hijriDate}
-        </Text>
+        <Flex justify="space-between" align="center" mb={4}>
+          {/* Ikon Kalender + Judul */}
+          <Flex align="center">
+            <FaCalendarAlt size={20} style={{ marginRight: "8px" }} />
+            <Heading size="md">Catat Amalan Harian</Heading>
+          </Flex>
+
+          {/* Ikon Help */}
+          <FaQuestionCircle
+            size={20}
+            cursor="pointer"
+            onClick={onOpen}
+            color="blue"
+          />
+        </Flex>
+
+        <Select
+          value={selectedHijriDate}
+          onChange={(e) => {
+            const hijriDate = e.target.value;
+            const masehiDate =
+              hijriDates.find((d) => d.hijri === hijriDate)?.masehi || "";
+            setSelectedHijriDate(hijriDate);
+            setSelectedMasehiDate(masehiDate);
+            setLoading(true); // 🔹 Agar tampilan menunjukkan "Memuat..." sebelum data baru masuk
+          }}
+          mt={2}
+        >
+          {hijriDates.map((date, index) => (
+            <option key={index} value={date.hijri}>
+              {date.hijri}
+            </option>
+          ))}
+        </Select>
 
         {loading ? (
           <Text textAlign="center" mt={4}>
@@ -232,20 +312,26 @@ export default function CatatAmalanPage() {
         ) : (
           <VStack spacing={4} align="stretch" mt={4}>
             {amalan.map((item, index) => (
-              <Box 
-              key={item.id} 
-              p={3} 
-              borderWidth={1} 
-              borderRadius="md" 
-              bg={
-                item.isParent ? "gray.200" : // ✅ Jika parent, abu-abu
-                item.done ? "green.100" : // ✅ Jika amalan sudah "done", hijau
-                selectedAmalan.includes(item.id) ? "green.100" : "white" // ✅ Jika dipilih, hijau juga
-              }
-              cursor={item.isParent ? "default" : "pointer"} // ✅ Parent tidak bisa diklik
-              _hover={item.isParent ? {} : { bg: "green.50" }} // ✅ Hover hanya untuk anak
-              onClick={item.isParent ? undefined : () => toggleChecklist(index)} // ✅ Hanya bisa klik jika bukan parent
-            >
+              <Box
+                key={item.id}
+                p={3}
+                borderWidth={1}
+                borderRadius="md"
+                bg={
+                  item.isParent
+                    ? "gray.200" // ✅ Jika parent, abu-abu
+                    : item.done
+                    ? "green.100" // ✅ Jika amalan sudah "done", hijau
+                    : selectedAmalan.includes(item.id)
+                    ? "green.100"
+                    : "white" // ✅ Jika dipilih, hijau juga
+                }
+                cursor={item.isParent ? "default" : "pointer"} // ✅ Parent tidak bisa diklik
+                _hover={item.isParent ? {} : { bg: "green.50" }} // ✅ Hover hanya untuk anak
+                onClick={
+                  item.isParent ? undefined : () => toggleChecklist(index)
+                } // ✅ Hanya bisa klik jika bukan parent
+              >
                 <Flex justify="space-between" align="center">
                   <Box>
                     <Text fontWeight="bold">{item.nama}</Text>
@@ -320,6 +406,27 @@ export default function CatatAmalanPage() {
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
+
+      {/* Modal Help */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Informasi</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>
+              Input catatan amalan dengan batas waktu matahari terbit. Tetapi
+              bisa memilih tanggal jika sebelumnya lupa atau belum melakukan
+              catatan amalan
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={onClose}>
+              Mengerti
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }
