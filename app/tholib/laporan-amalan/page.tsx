@@ -13,6 +13,7 @@ export default function LaporanAmalanPage() {
   const [loading, setLoading] = useState(true);
   const [weeklyReport, setWeeklyReport] = useState([]);
   const [dailyReport, setDailyReport] = useState<DailyReport[]>([]);
+  const [hijriDate, setHijriDate] = useState<string>("-");
 
   type DailyReport = {
     name: string;
@@ -55,12 +56,14 @@ export default function LaporanAmalanPage() {
         const { dataPerminggu, statusAmalan } = data;
 
         console.log("Data dari API:", data);
+
+        setHijriDate(data.prayerTimes.HijriDate);
         
         // Format data mingguan
         const formattedWeekly = dataPerminggu.map((item: { name: string; value: number }) => ({
           day: item.name,
           completed: item.value,
-          total: 17, // Sesuaikan dengan jumlah amalan total yang ada
+          total: 20, // Sesuaikan dengan jumlah amalan total yang ada
         }));
 
         // Format data harian
@@ -105,9 +108,9 @@ export default function LaporanAmalanPage() {
         </Heading>
 
         {/* Informasi Tanggal */}
-        <Text fontSize="sm" color="gray.600" textAlign="center" mb={2}>
+        <Text fontSize="md" color="black" textAlign="center" mb={2}>
           {filter === "daily"
-            ? `Tanggal: ${formattedToday}`
+            ? `${hijriDate}`
             : `Minggu: ${formattedStartWeek} - ${formattedEndWeek}`}
         </Text>
 

@@ -25,7 +25,6 @@ export default function IbadahList({ filter, weeklyData, dailyData }: IbadahList
 
   return (
     <Box bg="gray.50" p={4} borderRadius="md">
-      <Text fontSize="sm" fontWeight="bold" mb={2}>Detail Laporan</Text>
       <VStack align="stretch" spacing={2}>
         {data.length === 0 ? (
           <Text fontSize="sm" color="gray.500" textAlign="center">

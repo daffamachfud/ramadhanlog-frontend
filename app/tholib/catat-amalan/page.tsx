@@ -76,6 +76,8 @@ export default function CatatAmalanPage() {
   
         const data = await response.json();
         if (!data.success) throw new Error(data.message);
+
+        
   
         const parentIds = new Set(
           data.data.map((item: any) => item.parentId).filter(Boolean)

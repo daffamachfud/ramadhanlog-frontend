@@ -5,16 +5,7 @@ import {
   Box,
   Spinner,
   Text,
-  Button,
-  Input,
-  FormLabel,
   useDisclosure,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   HStack,
   IconButton,
   Heading,
@@ -98,24 +89,32 @@ export default function SudahLaporanDetail() {
       {loading ? (
         <Spinner size="lg" mt={4} />
       ) : detailLaporan.length > 0 ? (
-        <Table variant="simple" mt={4} size="sm">
-          <Thead>
-            <Tr>
-              <Th>No</Th>
-              <Th>Nama Amalan</Th>
-              <Th>Status</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {detailLaporan.map((item, index) => (
-              <Tr key={item.id}>
-                <Td>{index + 1}</Td>
-                <Td>{item.nama_amalan}</Td>
-                <Td>{item.status ? "✅" : "❌"}</Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
+        detailLaporan.map((item) => (
+          <Box
+            key={item.id}
+            p={4}
+            borderWidth="1px"
+            borderRadius="md"
+            boxShadow="md"
+            cursor="pointer"
+            _hover={{ bg: "gray.100" }}
+          >
+            <HStack justifyContent="space-between">
+              <Box>
+                <Text fontWeight="bold" fontSize="sm">
+                  {item.nama_amalan}
+                </Text>
+              </Box>
+              {item.type === "dropdown" ? (
+                <Text fontWeight="bold">
+                  {item.nilai === "" ? "-" : item.nilai}
+                </Text>
+              ) : (
+                <Text fontWeight="bold">{item.status ? "✅" : "❌"}</Text> // Menampilkan status sebagai ceklis
+              )}
+            </HStack>
+          </Box>
+        ))
       ) : (
         <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
       )}

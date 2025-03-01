@@ -34,12 +34,14 @@ const TholibDashboard = () => {
     Ashar: string;
     Maghrib: string;
     Isya: string;
+    HijriDate: string;
   }>({
     Subuh: "-",
     Dzuhur: "-",
     Ashar: "-",
     Maghrib: "-",
     Isya: "-",
+    HijriDate: "-"
   });
 
   // Simulasi pengambilan data dari API

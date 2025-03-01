@@ -12,6 +12,7 @@ interface PrayerTimesProps {
     Ashar: string;
     Maghrib: string;
     Isya: string;
+    HijriDate: string;
   };
 }
 
@@ -56,7 +57,7 @@ const PrayerTimesHeader: React.FC<PrayerTimesProps> = ({ prayerTimes }) => {
 
         {/* Tanggal Hijriah & Masehi */}
         <Box textAlign="right">
-          <Text fontSize="sm" fontWeight="bold">{hijriDate}</Text>
+          <Text fontSize="sm" fontWeight="bold">{prayerTimes.HijriDate}</Text>
           <Text fontSize="xs">{getFormattedDate()}</Text>
         </Box>
       </Flex>
@@ -67,12 +68,13 @@ const PrayerTimesHeader: React.FC<PrayerTimesProps> = ({ prayerTimes }) => {
           ? Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} height="20px" width="60px" />
             ))
-          : Object.entries(prayerTimes).map(([name, time]) => (
-              <Box key={name} textAlign="center" minWidth="60px">
-                <Text fontSize="xs" fontWeight="bold">{name}</Text>
-                <Text fontSize="sm">{time}</Text>
-              </Box>
-            ))}
+          : Object.entries(prayerTimes).map(([name, time]) => name !== "HijriDate" && ( // Pastikan tidak menampilkan HijriDate dua kali
+            <Box key={name} textAlign="center" minWidth="60px">
+              <Text fontSize="xs" fontWeight="bold">{name}</Text>
+              <Text fontSize="sm">{time}</Text>
+            </Box>
+          )
+            )}
       </Flex>
     </Box>
   );
