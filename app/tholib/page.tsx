@@ -28,6 +28,20 @@ const TholibDashboard = () => {
     { name: string; completed: boolean }[]
   >([]);
 
+  const [prayerTimes, setPrayerTimes] = useState<{
+    Subuh: string;
+    Dzuhur: string;
+    Ashar: string;
+    Maghrib: string;
+    Isya: string;
+  }>({
+    Subuh: "-",
+    Dzuhur: "-",
+    Ashar: "-",
+    Maghrib: "-",
+    Isya: "-",
+  });
+
   // Simulasi pengambilan data dari API
   useEffect(() => {
     async function fetchDashboardData() {
@@ -77,6 +91,10 @@ const TholibDashboard = () => {
             completed: false,
           })) || []),
         ]);
+
+        if (data.prayerTimes) {
+          setPrayerTimes(data.prayerTimes);
+        }
       } catch (error) {
         console.error("Gagal memuat data dashboard:", error);
       } finally {
@@ -93,7 +111,7 @@ const TholibDashboard = () => {
   const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
   return (
     <Box p={6}>
-      <PrayerTimesHeader />
+      <PrayerTimesHeader prayerTimes={prayerTimes} />
   
       <VStack spacing={6} align="stretch">
         {/* Ringkasan Amalan Mingguan dan Harian */}

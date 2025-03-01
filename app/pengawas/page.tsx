@@ -28,20 +28,6 @@ import PrayerTimesHeader from "../tholib/components/PrayerTimesHeader";
 
 moment.locale("en");
 
-// Format tanggal Hijriah dengan nama bulan dalam huruf Latin
-const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
-
-// Fungsi untuk mendapatkan tanggal dalam format "Senin, 26 Februari 2025"
-const getFormattedDate = (): string => {
-  const today = new Date();
-  return new Intl.DateTimeFormat("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(today);
-};
-
 const DashboardMurabbi = () => {
   const router = useRouter(); // Inisialisasi router
 
@@ -58,6 +44,20 @@ const DashboardMurabbi = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [prayerTimes, setPrayerTimes] = useState<{
+    Subuh: string;
+    Dzuhur: string;
+    Ashar: string;
+    Maghrib: string;
+    Isya: string;
+  }>({
+    Subuh: "-",
+    Dzuhur: "-",
+    Ashar: "-",
+    Maghrib: "-",
+    Isya: "-",
+  });
 
   const goToDetail = (id: number, name: string) => {
     const encodedName = encodeURIComponent(name); // Encode nama untuk URL
@@ -93,6 +93,17 @@ const DashboardMurabbi = () => {
               nama_halaqah: t.nama_halaqah, // Pastikan nama halaqah sesuai alias
             })),
           });
+
+          // 🔹 Update waktu sholat jika tersedia
+          if (data.data.prayerTimes) {
+            setPrayerTimes({
+              Subuh: data.data.prayerTimes.Subuh || "-",
+              Dzuhur: data.data.prayerTimes.Dzuhur || "-",
+              Ashar: data.data.prayerTimes.Ashar || "-",
+              Maghrib: data.data.prayerTimes.Maghrib || "-",
+              Isya: data.data.prayerTimes.Isya || "-",
+            });
+          }
         } else {
           setError("Gagal mengambil data dashboard");
         }
@@ -126,7 +137,7 @@ const DashboardMurabbi = () => {
   return (
     <Box p={6}>
       {/* <Heading mb={4}>Dashboard Murabbi</Heading> */}
-      <PrayerTimesHeader />
+      <PrayerTimesHeader prayerTimes={prayerTimes} />
 
       {/* Ringkasan Laporan */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
