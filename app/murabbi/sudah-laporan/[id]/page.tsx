@@ -37,6 +37,7 @@ export default function SudahLaporanDetail() {
     const today = new Date().toISOString().split("T")[0]; // Format YYYY-MM-DD
     return today;
   });
+  const [hijriDate, setHijriDate] = useState<string>("-");
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Fetch data ketika id atau tanggal berubah
@@ -57,6 +58,9 @@ export default function SudahLaporanDetail() {
         } else {
           setDetailLaporan([]);
         }
+        if (response && response.hijriDate) {
+          setHijriDate(response.hijriDate)
+        }
       } catch (error) {
         console.error("Gagal mengambil detail laporan:", error);
       } finally {
@@ -65,8 +69,6 @@ export default function SudahLaporanDetail() {
     }
     loadData();
   }, [id, selectedDate]);
-
-  const hijriDate = moment().locale("en").format("iD iMMMM iYYYY") + " H";
 
   return (
     <Box p={4} borderWidth={1} borderRadius="lg" mt={4}>
