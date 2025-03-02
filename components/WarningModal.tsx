@@ -25,11 +25,16 @@ const WarningModal = () => {
       >
         <ModalHeader>⚠️ Pemberitahuan Penting ⚠️</ModalHeader>
         <ModalBody>
+         <Text fontSize="md">
+         📅 3 Ramadhan 1446 H
+          </Text>
           <Text fontSize="md">
-            Sistem sekarang sudah menerapkan batas waktu submit amalan di waktu magrib.
+            Pembaruan Fitur : 
+            - Untuk laporan amalan tidak terbatas oleh waktu matahari terbenam.
+            - Bisa memilih tanggal untuk input laporan catatan amalan
           </Text>
           <Text fontSize="sm" mt={2} fontStyle="italic" color="gray.600">
-          Jadi nanti jika sudah masuk magrib, pada halaman catatan amalan akan di reset.
+            Masih ada beberapa data yang belum sesuai seperti detail laporan amalan. InsyaAllah masih dalam proses perkembangan, tetapi jika masih ada masalah ketika laporan amalan silahkan hubungi PJ masing - masing
           </Text>
         </ModalBody>
         <ModalFooter>
