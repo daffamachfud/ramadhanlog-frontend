@@ -57,3 +57,29 @@ export async function fetchDetailLaporanTholib(tholibId: string, selectedDate: s
   return result;
 }
 
+export async function fetchDetailLaporanTholibMingguan(tholibId: string) {
+  const cookies = parseCookies();
+  const token = cookies.token;
+  if (!token) throw new Error("Token tidak ditemukan");
+
+  const response = await fetch(api.getLaporanTholibDetailMingguan, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      tholibId: tholibId, // Kirim melalui body
+    }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Gagal mengambil detail laporan tholib");
+  }
+
+  const result = await response.json();
+  console.log("hasil response :", result);
+  return result;
+}
+

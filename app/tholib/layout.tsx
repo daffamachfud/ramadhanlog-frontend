@@ -7,7 +7,7 @@ import WarningModal from "@/components/WarningModal";
 export default function TholibLayout({ children }: { children: React.ReactNode }) {
   return (
     <Box minH="100vh" pt="0px" pb="80px"> {/* Tambahkan padding bottom lebih besar */}
-    <WarningModal/>
+    {/* <WarningModal/> */}
     {/* <Header title={title} /> */}
     {children}
     <BottomNav />
