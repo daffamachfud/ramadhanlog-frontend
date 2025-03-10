@@ -15,7 +15,6 @@ export const api = {
   getLaporanTholib: `${API_URL}/laporan-tholib/`,
   getLaporanTholibByPengawas: `${API_URL}/laporan-tholib/pengawas`,
   getLaporanTholibDetail: `${API_URL}/laporan-tholib/detail`,
-  getAmalanLaporanTholib: `${API_URL}/laporan-tholib/tholib`,
   getLaporanTholibDetailMingguan: `${API_URL}/laporan-tholib/detail/week`,
 
   getMurabbiReported: `${API_URL}/dashboard/murabbi/reported`,
