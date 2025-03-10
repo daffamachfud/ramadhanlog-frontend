@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import React from 'react';
 import { Box, Text, Flex, Skeleton, Icon } from "@chakra-ui/react";
 import { FaMapMarkerAlt } from "react-icons/fa"; // Ikon lokasi
 import moment from "moment-hijri";
@@ -64,18 +65,24 @@ const PrayerTimesHeader: React.FC<PrayerTimesProps> = ({ prayerTimes }) => {
 
       {/* Baris 2: Waktu Sholat (Satu Baris) */}
       <Flex justify="space-between" align="center">
-        {loading
-          ? Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} height="20px" width="60px" />
-            ))
-          : Object.entries(prayerTimes).map(([name, time]) => name !== "HijriDate" && ( // Pastikan tidak menampilkan HijriDate dua kali
-            <Box key={name} textAlign="center" minWidth="60px">
+  {loading
+    ? Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} height="20px" width="50px" />
+      ))
+    : Object.entries(prayerTimes).map(([name, time], index, array) => {
+        if (name === "HijriDate") return null; // Skip HijriDate
+
+        return (
+          <React.Fragment key={name}>
+            <Box textAlign="center" minWidth="50px">
               <Text fontSize="xs" fontWeight="bold">{name}</Text>
-              <Text fontSize="sm">{time}</Text>
+              <Text fontSize="xs">{time}</Text>
             </Box>
-          )
-            )}
-      </Flex>
+            {index < array.length - 2 && <Box width="1px" bg="gray.200" height="20px" />} 
+          </React.Fragment>
+        );
+      })}
+</Flex>
     </Box>
   );
 };

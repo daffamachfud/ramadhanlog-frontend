@@ -50,7 +50,10 @@ const TholibDashboard = () => {
       try {
         const cookies = parseCookies();
         const token = cookies.token;
-        if (!token) return;
+        if (!token){
+          window.location.href = "https://haizumapp.com";
+          return;
+        } 
 
         const response = await fetch(api.dashboardTholib, {
           headers: {

@@ -74,6 +74,7 @@ const DashboardMurabbi = () => {
         if (!token) {
           setError("Anda harus login terlebih dahulu.");
           setLoading(false);
+          window.location.href = "https://haizumapp.com";
           return;
         }
         const response = await fetch(api.dashboardMurrabi, {

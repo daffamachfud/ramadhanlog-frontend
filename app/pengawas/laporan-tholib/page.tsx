@@ -12,12 +12,15 @@ export default function LaporanTholibPage() {
   const [filteredLaporan, setFilteredLaporan] = useState<LaporanTholib[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [filters, setFilters] = useState({ nama: ""});
+  
 
   useEffect(() => {
+    console.log("Fetching data with filter:", filters.nama); 
     async function loadData() {
       setLoading(true);
       try {
         const data = await fetchLaporanTholib(filters.nama);
+        console.log("Data fetched:", data); 
         setLaporan(data);
         setFilteredLaporan(data);
       } catch (error) {
@@ -27,7 +30,7 @@ export default function LaporanTholibPage() {
       }
     }
     loadData();
-  }, [filters]); // 🔥 Fetch ulang jika filter berubah
+  }, [filters]);
 
   return (
     <Box w="full" maxW="container.md" mx="auto" p={4} overflow="hidden">
