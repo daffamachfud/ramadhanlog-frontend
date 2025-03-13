@@ -11,7 +11,7 @@ type AmalanChartProps = {
 // 🔹 Fungsi untuk menentukan warna berdasarkan jumlah amalan
 const getColor = (value: number) => {
   if (value === 0) return "#ebedf0"; // Abu-abu (tidak ada laporan)
-  if (value >= 1 && value <= 9) return "#c6e48b"; // Hijau muda
+  if (value >= 1 && value <= 9) return "#dff2b2"; // Hijau muda
   if (value >= 10 && value <= 15) return "#7bc96f"; // Hijau sedang
   return "#0a4f20"; // Lebih dari 20 amalan
 };
@@ -65,7 +65,7 @@ const AmalanChart: React.FC<AmalanChartProps> = ({ data }) => {
           </Text>
         </Box>
         <Box display="flex" alignItems="center">
-          <Box w="10px" h="10px" bg="#c6e48b" borderRadius="3px" mr={2} />
+          <Box w="10px" h="10px" bg="#dff2b2" borderRadius="3px" mr={2} />
           <Text as="span" fontWeight="bold">
             1 - 9
           </Text>{" "}
@@ -85,7 +85,7 @@ const AmalanChart: React.FC<AmalanChartProps> = ({ data }) => {
         <Box display="flex" alignItems="center">
           <Box w="10px" h="10px" bg="#196127" borderRadius="3px" mr={2} />
           <Text as="span" fontWeight="bold">
-            &gt; 20
+            &gt; 15
           </Text>{" "}
           <Text as="span" ml={1}>
             Amalan
