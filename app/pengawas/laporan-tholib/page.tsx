@@ -12,7 +12,6 @@ export default function LaporanTholibPage() {
   const [filteredLaporan, setFilteredLaporan] = useState<LaporanTholib[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [filters, setFilters] = useState({ nama: ""});
-  
 
   useEffect(() => {
     console.log("Fetching data with filter:", filters.nama); 

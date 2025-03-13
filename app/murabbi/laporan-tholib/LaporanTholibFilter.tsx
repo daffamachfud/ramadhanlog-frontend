@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Input, Button, Stack, Select } from "@chakra-ui/react";
+import { Input, Stack, Select } from "@chakra-ui/react";
 import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
 
@@ -17,17 +17,17 @@ export default function LaporanTholibFilter({ setFilters }: Props) {
       const cookies = parseCookies();
       const token = cookies.token;
       if (!token) return;
-  
+
       try {
         const response = await fetch(api.halaqahMurabbi, {
           headers: { Authorization: `Bearer ${token}` },
         });
-  
+
         const result = await response.json();
-        console.log("Halaqah API Response:", result); // Debugging
-  
+        console.log("Halaqah API Response:", result);
+
         if (Array.isArray(result.data)) {
-          setHalaqahList(result.data); // Ambil dari `data`
+          setHalaqahList(result.data);
         } else {
           console.error("Response bukan array:", result);
           setHalaqahList([]);
@@ -37,13 +37,18 @@ export default function LaporanTholibFilter({ setFilters }: Props) {
         setHalaqahList([]);
       }
     }
-  
+
     fetchHalaqah();
   }, []);
 
-  const handleFilter = () => {
-    setFilters({ nama, halaqah });
-  };
+  // ⏳ Debounce filter perubahan nama dan halaqah (otomatis update filter setelah 300ms)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setFilters({ nama, halaqah });
+    }, 300); // 🔥 Debounce 300ms
+
+    return () => clearTimeout(timeout);
+  }, [nama, halaqah, setFilters]);
 
   return (
     <Stack spacing={3} mb={4}>
@@ -64,10 +69,6 @@ export default function LaporanTholibFilter({ setFilters }: Props) {
           </option>
         ))}
       </Select>
-
-      <Button colorScheme="blue" onClick={handleFilter}>
-        Terapkan Filter
-      </Button>
     </Stack>
   );
 }

@@ -24,12 +24,12 @@ const DailySummary: React.FC<DailySummaryProps> = ({ totalAmalan, completedAmala
         {/* Informasi Target dan Remaining */}
         <VStack align="start" spacing={2}>
           <Box>
-            <Text fontSize="md" fontWeight="bold">{totalAmalan}</Text>
-            <Text fontSize="sm" color="gray.500">Jumlah Amalan</Text>
-          </Box>
-          <Box>
             <Text fontSize="md" fontWeight="bold">{remainingAmalan}</Text>
             <Text fontSize="sm" color="gray.500">Amalan yang belum dilakukan</Text>
+          </Box>
+          <Box>
+            <Text fontSize="md" fontWeight="bold">{totalAmalan}</Text>
+            <Text fontSize="sm" color="gray.500">Jumlah Amalan</Text>
           </Box>
         </VStack>
 

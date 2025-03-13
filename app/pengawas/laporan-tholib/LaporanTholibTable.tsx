@@ -8,8 +8,9 @@ export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib
   const [selectedTholib, setSelectedTholib] = useState<LaporanTholib | null>(null);
   const router = useRouter();
 
-  const goToDetail = (id: number) => {
-    router.push(`/pengawas/laporan-tholib/${id.toString()}`);
+  const goToDetail = (id: number, name: string) => {
+    const encodedName = encodeURIComponent(name); // Encode nama untuk URL
+    router.push(`/pengawas/laporan-tholib/${id.toString()}?name=${encodedName}`);
   };
   
   return (
@@ -30,7 +31,7 @@ export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib
                  <Button 
                   size="sm" 
                   colorScheme="blue" 
-                  onClick={() => goToDetail(tholib.id)}
+                  onClick={() => goToDetail(tholib.id, tholib.name)}
                 >
                   Lihat Detail
                 </Button>
