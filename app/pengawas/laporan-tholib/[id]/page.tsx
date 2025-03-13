@@ -1,276 +1,272 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
   Spinner,
   Text,
   Button,
-  Select,
-  FormControl,
-  FormLabel,
   HStack,
   VStack,
   Badge,
-  Switch
+  SimpleGrid,
+  IconButton,
+  Heading,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { fetchDetailLaporanTholib, fetchDetailLaporanTholibMingguan } from "../laporanTholibService";
-import { DetailLaporanTholib } from "../types";
+import { ArrowBackIcon, QuestionIcon } from "@chakra-ui/icons";
+import { useEffect, useState, useRef } from "react";
+import { fetchDetailLaporanTholib } from "../laporanTholibService"; // Service API
 import AmalanChart from "@/app/tholib/components/AmalanChart";
 
 export default function LaporanTholibDetail() {
   const { id } = useParams();
   const router = useRouter();
-  const [detailLaporan, setDetailLaporan] = useState<DetailLaporanTholib[]>([]);
+  const params = useSearchParams();
+  const name = params.get("name") || "Nama Tidak Diketahui";
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<"daily" | "weekly">("daily"); // State mode tampilan
-  const [amalanPerHari, setAmalanPerHari] = useState<{ [key: string]: DetailLaporanTholib[] }>({});
-  const [chartData, setChartData] = useState<{ name: string; value: number }[]>([]);
-  const [ringkasanMingguan, setRingkasanMingguan] = useState<{ name: string; value: number }[]>([]);
-
-  const [availableDates, setAvailableDates] = useState<string[]>([]); // Daftar tanggal yang tersedia
-
-  const [selectedDailyHijriDate, setSelectedDailyHijriDate] = useState<string | null>(null);
-const [selectedWeeklyHijriDate, setSelectedWeeklyHijriDate] = useState<string | null>(null);
-
+  const [selectedHijriDate, setSelectedHijriDate] = useState<string | null>(
+    null
+  );
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [chartData, setChartData] = useState<{ name: string; value: number }[]>(
+    []
+  );
+  const [amalanList, setAmalanList] = useState<
+    { nama_amalan: string; description: string; status: boolean }[]
+  >([]);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     if (!id) return;
   
-    async function fetchInitialDate() {
+    async function loadInitialData() {
       try {
         setLoading(true);
         const response = await fetchDetailLaporanTholib(id.toString(), "");
-        console.log("Response (fetchInitialDate):", response);
   
-        if (response && response.hijriDate) {
-          const currentHijriDate = response.hijriDate; // Contoh: "3 Ramadhan 1446 H"
-          const hijriParts = currentHijriDate.split(" "); // ["3", "Ramadhan", "1446", "H"]
-          const formattedHijriDate = `${hijriParts[0]} ${hijriParts[1]} ${hijriParts[2]}`; // "3 Ramadhan 1446"
+        if (response) {
+          console.log("📌 API Initial Response:", response);
+          setChartData(response.line_chart || []);
+          setAvailableDates(response.button_dates || []);
   
-          // Buat daftar tanggal dari 1 hingga tanggal sekarang
-          const currentHijriDay = parseInt(hijriParts[0]); // Ambil angka tanggalnya
-          const datesArray = [];
-          for (let i = 1; i <= currentHijriDay; i++) {
-            datesArray.push(`${i} Ramadhan ${hijriParts[2]}`); // Format "1 Ramadhan 1446"
+          if (!selectedHijriDate && response.hijri_current_date) {
+            console.log("🟢 Set Default Hijri Date:", response.hijri_current_date);
+            setSelectedHijriDate(response.hijri_current_date);
           }
   
-          setAvailableDates(datesArray);
-          setSelectedDailyHijriDate(formattedHijriDate); // Simpan dalam format yang benar
+          setAmalanList(response.amalan_list || []);
         }
       } catch (error) {
-        console.error("Gagal mengambil tanggal awal:", error);
+        console.error("❌ Gagal mengambil laporan:", error);
       } finally {
         setLoading(false);
       }
     }
   
-    fetchInitialDate();
-  }, [id]);
+    loadInitialData();
+  }, [id]); // ✅ Load hanya saat `id` berubah
   
-  // Fetch laporan setelah selectedHijriDate tersedia
+  // 🔥 Trigger API ulang setelah `selectedHijriDate` tersedia
   useEffect(() => {
-    if (!id || !mode) return;
+    if (!id || !selectedHijriDate) return;
   
-    async function loadData() {
+    async function reloadWithHijriDate() {
       try {
         setLoading(true);
+        console.log("🔥 API Dipanggil ulang dengan selectedHijriDate:", selectedHijriDate);
+        const response = await fetchDetailLaporanTholib(id.toString(), selectedHijriDate || "");
   
-        if (mode === "daily") {
-          console.log("Fetching daily report for ID:", id, "and Hijri Date:", selectedDailyHijriDate);
-          const response = await fetchDetailLaporanTholib(id.toString(), selectedDailyHijriDate || "");
-          console.log("Response (daily):", response);
-  
-          if (response?.data) {
-            setDetailLaporan(response.data);
-          } else {
-            setDetailLaporan([]);
-          }
-  
-        } else {
-          console.log("Fetching weekly report for ID:", id);
-          const response = await fetchDetailLaporanTholibMingguan(id.toString());
-          console.log("Response (weekly):", response);
-  
-          if (response && response.ringkasan_mingguan?.length > 0) {
-            setAmalanPerHari(response.amalan);
-            setRingkasanMingguan(response.ringkasan_mingguan);
-            setChartData(
-              response.ringkasan_mingguan.map((item: { name: string; value: number }) => ({
-                name: item.name,
-                value: item.value,
-              }))
-            );
-  
-            // Ambil tanggal pertama sebagai default jika belum ada selectedHijriDate
-            if (!selectedWeeklyHijriDate) {
-              setSelectedWeeklyHijriDate(response.ringkasan_mingguan[0].name);
-            }
-          } else {
-            setAmalanPerHari({});
-            setChartData([]);
-            setSelectedWeeklyHijriDate(null); // Reset jika tidak ada data
-          }
+        if (response) {
+          console.log("📌 API Response with Date:", response);
+          setChartData(response.line_chart || []);
+          setAmalanList(response.amalan_list || []);
         }
       } catch (error) {
-        console.error("Gagal mengambil laporan:", error);
+        console.error("❌ Gagal mengambil laporan dengan tanggal:", error);
       } finally {
         setLoading(false);
       }
     }
   
-    loadData();
-  }, [id, mode, selectedDailyHijriDate, selectedWeeklyHijriDate]);
+    reloadWithHijriDate();
+  }, [id, selectedHijriDate]);
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (scrollRef.current && selectedHijriDate) {
+      const selectedDay = selectedHijriDate.split(" ")[0].trim();
+      console.log("🟢 Selected Day:", selectedDay);
+
+      // ✅ Cari button berdasarkan data-day (bukan textContent)
+      const selectedButton = scrollRef.current.querySelector(
+        `button[data-day="${selectedDay}"]`
+      );
+
+      console.log(
+        "🔴 Selected Button Found:",
+        selectedButton ? "✅ Yes" : "❌ No"
+      );
+
+      selectedButton?.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [selectedHijriDate]); // 🔥 Jalankan setiap kali tanggal berubah
 
   return (
     <Box p={4} borderWidth={1} borderRadius="lg" mt={4}>
       {/* Tombol Kembali */}
-      <Button colorScheme="gray" size="sm" onClick={() => router.back()} mb={4}>
-        ← Kembali
-      </Button>
-
-      {/* Toggle Mode (Harian / Mingguan) */}
-     {/* Tombol Pilih Mode (Daily / Weekly) */}
-<HStack mt={2} spacing={2}>
-  <Button
-    size="sm"
-    colorScheme={mode === "daily" ? "blue" : "gray"}
-    onClick={() => setMode("daily")}
-  >
-    Harian
-  </Button>
-  <Button
-    size="sm"
-    colorScheme={mode === "weekly" ? "blue" : "gray"}
-    onClick={() => setMode("weekly")}
-  >
-    Mingguan
-  </Button>
-</HStack>
-
-      {/* Form Pilih Tanggal (Hanya untuk Mode Harian) */}
-      {mode === "daily" && (
-        <FormControl mt={4}>
-          <FormLabel>Pilih Tanggal Hijriah</FormLabel>
-          <Select
-            placeholder="Pilih Tanggal"
-            value={selectedDailyHijriDate || ""}
-            onChange={(e) => setSelectedDailyHijriDate(e.target.value)}
-          >
-            {availableDates.map((date) => (
-              <option key={date} value={date}>
-                {date}
-              </option>
-            ))}
-          </Select>
-        </FormControl>
-      )}
-
-      {/* Pilih Tanggal (Hanya untuk Mode Mingguan) */}
-      {mode === "weekly" && ringkasanMingguan.length > 0 && (
-        <Box mt={4} overflowX="auto" whiteSpace="nowrap">
-          <HStack spacing={2} width="max-content">
-            {ringkasanMingguan.map((item, index) => {
-              // Jika belum ada selectedHijriDate, set default ke tanggal pertama
-              if (!selectedWeeklyHijriDate && index === 0) {
-                setSelectedWeeklyHijriDate(item.name);
-              }
-
-              return (
-                <Button
-                  key={index}
-                  size="sm"
-                  colorScheme={
-                    selectedWeeklyHijriDate === item.name ? "blue" : "gray"
-                  }
-                  onClick={() => setSelectedWeeklyHijriDate(item.name)}
-                >
-                  {item.name}
-                </Button>
-              );
-            })}
-          </HStack>
+      <HStack spacing={3} justify="space" align="center" mb={4}>
+        <IconButton
+          icon={<ArrowBackIcon />}
+          aria-label="Kembali"
+          onClick={() => router.back()}
+          colorScheme="blue"
+          variant="ghost"
+          size="md"
+        />
+        <Box textAlign="center" flex="1">
+          <Heading size="sm">{name}</Heading>
         </Box>
-      )}
+        <IconButton
+          icon={<QuestionIcon />}
+          aria-label="Help"
+          onClick={onOpen}
+          colorScheme="gray"
+          variant="ghost"
+          size="md"
+        />
+      </HStack>
 
-      {/* Ringkasan Mingguan (Hanya untuk Mode Mingguan) */}
-      {mode === "weekly" && <AmalanChart data={chartData} />}
-
-      {/* Daftar Data Amalan */}
-      <Box mt={8}>
-        {loading ? (
-          <Spinner size="lg" mt={4} />
-        ) : mode === "daily" ? (
-          // TAMPILAN MODE HARIAN
-          detailLaporan.length > 0 ? (
-            detailLaporan.map((item) => (
-              <Box
-                key={item.id}
-                p={4}
-                borderWidth="1px"
-                borderRadius="md"
-                boxShadow="md"
-              >
-                <HStack
-                  justifyContent="space-between"
-                  p={3}
-                  borderWidth="1px"
-                  borderRadius="md"
-                >
-                  <VStack align="start" spacing={1}>
-                    <Text fontWeight="bold" fontSize="sm">
-                      {item.nama_amalan}
-                    </Text>
-                    <Text fontSize="xs" color="gray.600">
-                      {item.description}
-                    </Text>
-                  </VStack>
-                  <Box>
-                    <Badge colorScheme={item.status ? "green" : "red"}>
-                      {item.status ? "Selesai" : "Belum"}
-                    </Badge>
-                  </Box>
-                </HStack>
-              </Box>
-            ))
-          ) : (
-            <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
-          )
-        ) : amalanPerHari[selectedWeeklyHijriDate || ""] ? (
-          amalanPerHari[selectedWeeklyHijriDate || ""].map((item) => (
-            <Box
-              key={item.id}
-              p={4}
-              borderWidth="1px"
-              borderRadius="md"
-              boxShadow="md"
-            >
-              <HStack
-                justifyContent="space-between"
-                p={3}
-                borderWidth="1px"
-                borderRadius="md"
-              >
-                <VStack align="start" spacing={1}>
-                  <Text fontWeight="bold" fontSize="sm">
-                    {item.nama_amalan}
-                  </Text>
-                  <Text fontSize="xs" color="gray.600">
-                    {item.description}
-                  </Text>
-                </VStack>
-                <Box>
-                  <Badge colorScheme={item.status ? "green" : "red"}>
-                    {item.status ? "Selesai" : "Belum"}
-                  </Badge>
-                </Box>
-              </HStack>
-            </Box>
-          ))
-        ) : (
-          <Text mt={4}>Tidak ada data amalan pada hari ini.</Text>
-        )}
+      {/* Line Chart */}
+      <Box mt={4}>
+        <AmalanChart data={chartData} />
       </Box>
+
+      {/* Tombol Ramadhan Horizontal */}
+      <Box mt={4} overflowX="auto" whiteSpace="nowrap" ref={scrollRef}>
+        <HStack spacing={2} width="max-content">
+          {availableDates.map((date, index) => {
+            const day = date.split(" ")[0]; // Ambil angka saja, contoh "13"
+            const isSelected = selectedHijriDate === date; // 🔥 Pastikan hanya satu button yang dipilih
+
+            return (
+              <Button
+                key={`date-${index}`}
+                size="sm"
+                variant={
+                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
+                    ? "solid"
+                    : "outline"
+                } // ✅ Bandingkan hanya "13 Ramadhan"
+                colorScheme={
+                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
+                    ? "blue"
+                    : "gray"
+                }
+                className={
+                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
+                    ? "selected-date"
+                    : ""
+                }
+                onClick={() => {
+                  console.log(
+                    "🔵 Button Clicked:",
+                    date,
+                    "🔥 Selected Hijri Date Sebelumnya:",
+                    selectedHijriDate
+                  );
+                  setSelectedHijriDate(date);
+                }}
+                flexDirection="column"
+                height="50px"
+                borderRadius="md"
+                data-day={day} // ✅ Tambahkan atribut data-day
+              >
+                <Text
+                  fontSize="xs"
+                  fontWeight="bold"
+                  color={
+                    selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
+                      ? "white"
+                      : "gray.400"
+                  }
+                >
+                  Rmd
+                </Text>
+                <Text fontSize="md">{day}</Text>
+              </Button>
+            );
+          })}
+        </HStack>
+      </Box>
+
+      {/* List Amalan dalam Dua Kolom */}
+  <Box mt={8}>
+  {loading ? (
+    <Spinner size="lg" mt={4} />
+  ) : amalanList.length > 0 ? (
+    <SimpleGrid columns={[1, 2]} spacing={4}> {/* 1 kolom di mobile, 2 di tablet/desktop */}
+      {amalanList.map((item, index) => (
+        <Box
+          key={index}
+          p={3}
+          borderWidth="1px"
+          borderRadius="md"
+          boxShadow="md"
+          bg="gray.50"
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <VStack align="start" spacing={1} flex="1">
+            <Text fontWeight="bold" fontSize="sm">
+              {item.nama_amalan}
+            </Text>
+            <Text fontSize="xs" color="gray.600">
+              {item.description}
+            </Text>
+          </VStack>
+          <Badge colorScheme={item.status ? "green" : "red"}>
+            {item.status ? "Selesai" : "Belum"}
+          </Badge>
+        </Box>
+      ))}
+    </SimpleGrid>
+  ) : (
+    <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
+  )}
+</Box>
+
+      {/* Modal Help */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Informasi</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>
+            Laporan ini menampilkan grafik amalan dari bulan ramadhan.
+              Untuk data lengkap nya bisa pilih per tanggal yang bisa dipilih
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={onClose}>
+              Mengerti
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

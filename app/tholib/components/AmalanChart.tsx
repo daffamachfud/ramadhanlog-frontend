@@ -1,56 +1,97 @@
 "use client";
 
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { Box, Text } from "@chakra-ui/react";
+import React from "react";
+import { Box, Text, Tooltip, VStack, HStack } from "@chakra-ui/react";
 
+// 🔹 Tipe data untuk props
 type AmalanChartProps = {
   data: { name: string; value: number }[];
 };
 
+// 🔹 Fungsi untuk menentukan warna berdasarkan jumlah amalan
+const getColor = (value: number) => {
+  if (value === 0) return "#ebedf0"; // Abu-abu (tidak ada laporan)
+  if (value >= 1 && value <= 9) return "#c6e48b"; // Hijau muda
+  if (value >= 10 && value <= 15) return "#7bc96f"; // Hijau sedang
+  return "#0a4f20"; // Lebih dari 20 amalan
+};
+
 const AmalanChart: React.FC<AmalanChartProps> = ({ data }) => {
   return (
-    <Box p={3} bg="white" borderRadius="lg" boxShadow="md">
-      <Text fontSize="lg" fontWeight="bold" mb={4}>
-        Grafik <Text as="span" color="blue.500">Amalan Mingguan</Text>
+    <Box p={3} bg="white" borderRadius="lg" boxShadow="md" fontWeight="bold">
+      <Text fontSize="sm" mb={2}>
+        Amalan Bulan : Ramadhan 1446 H
       </Text>
 
-      <ResponsiveContainer width="100%" height={250}>
-        <BarChart data={data} barCategoryGap={40} barSize={30}>
-          {/* Garis bantu transparan agar lebih soft */}
-          <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} />
+      {/* 🔹 Grid dengan Label Tanggal */}
+      <Box display="flex" flexWrap="wrap" gap="4px" alignItems="center">
+        {data.map((item, index) => (
+          <VStack key={index} spacing={1} align="center">
+            {/* 🔹 Tooltip Sekarang Muncul */}
+            <Tooltip label={`${item.name}: ${item.value} amalan`} hasArrow>
+              <Box
+                width="14px"
+                height="14px"
+                bg={getColor(item.value)}
+                borderRadius="2px"
+                transition="0.2s"
+                tabIndex={0} // Agar Tooltip bisa muncul saat hover
+                _hover={{ transform: "scale(1.1)", cursor: "pointer" }}
+              />
+            </Tooltip>
+            <Text fontSize="xs" color="gray.600">
+              {item.name.split(" ")[0]} {/* Hanya tampilkan angka hari */}
+            </Text>
+          </VStack>
+        ))}
+      </Box>
 
-          {/* X-Axis: Menampilkan semua label */}
-          <XAxis 
-            dataKey="name" 
-            tick={{ fontSize: 6, fill: "#555" }} 
-            axisLine={false} 
-            tickLine={false} 
-            interval={0} // ✅ Pastikan semua label muncul
-            tickMargin={10} 
-          />
-          
-          {/* Tooltip minimalis */}
-          <Tooltip 
-            contentStyle={{ backgroundColor: "#ffffff", borderRadius: "8px", border: "none" }} 
-            itemStyle={{ fontSize: "12px" }} 
-          />
-
-          {/* Bar dengan gradient */}
-          <Bar 
-            dataKey="value" 
-            fill="url(#colorGradient)" 
-            radius={[8, 8, 0, 0]} 
-          />
-
-          {/* Gradient agar lebih soft dan modern */}
-          <defs>
-            <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3182CE" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#90CDF4" stopOpacity={0.4} />
-            </linearGradient>
-          </defs>
-        </BarChart>
-      </ResponsiveContainer>
+      {/* 🔹 Keterangan Warna */}
+      <Box
+        display="flex"
+        flexDirection="column"
+        gap={1}
+        mt={2}
+        fontSize="10px"
+        color="gray.600"
+      >
+        <Box display="flex" alignItems="center">
+          <Box w="10px" h="10px" bg="#ebedf0" borderRadius="3px" mr={2} />
+          <Text as="span" fontWeight="bold">
+            0
+          </Text>{" "}
+          <Text as="span" ml={1}>
+            Amalan
+          </Text>
+        </Box>
+        <Box display="flex" alignItems="center">
+          <Box w="10px" h="10px" bg="#c6e48b" borderRadius="3px" mr={2} />
+          <Text as="span" fontWeight="bold">
+            1 - 9
+          </Text>{" "}
+          <Text as="span" ml={1}>
+            Amalan
+          </Text>
+        </Box>
+        <Box display="flex" alignItems="center">
+          <Box w="10px" h="10px" bg="#7bc96f" borderRadius="3px" mr={2} />
+          <Text as="span" fontWeight="bold">
+            10 - 15
+          </Text>{" "}
+          <Text as="span" ml={1}>
+            Amalan
+          </Text>
+        </Box>
+        <Box display="flex" alignItems="center">
+          <Box w="10px" h="10px" bg="#196127" borderRadius="3px" mr={2} />
+          <Text as="span" fontWeight="bold">
+            &gt; 20
+          </Text>{" "}
+          <Text as="span" ml={1}>
+            Amalan
+          </Text>
+        </Box>
+      </Box>
     </Box>
   );
 };

@@ -29,6 +29,32 @@ export async function fetchLaporanTholib(nama?: string) {
   return response.json();
 }
 
+export async function fetchAmalanLaporanTholib(selectedDate: string) {
+  const cookies = parseCookies();
+  const token = cookies.token;
+  if (!token) throw new Error("Token tidak ditemukan");
+
+  const response = await fetch(api.getAmalanLaporanTholib, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      tanggal: selectedDate,
+    }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Gagal mengambil detail laporan tholib");
+  }
+
+  const result = await response.json();
+  console.log("hasil response :", result);
+  return result;
+}
+
 
 export async function fetchDetailLaporanTholib(tholibId: string, selectedDate: string) {
   const cookies = parseCookies();

@@ -9,7 +9,7 @@ export async function fetchLaporanTholib(nama?: string, halaqah?: string) {
 
   // Menyusun query parameter jika ada filter
   const queryParams = new URLSearchParams();
-  if (nama) queryParams.append("nama", nama);
+  if (nama) queryParams.append("name", nama);
   if (halaqah) queryParams.append("halaqah", halaqah);
 
   const url = `${api.getLaporanTholib}?${queryParams.toString()}`;

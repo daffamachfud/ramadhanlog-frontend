@@ -18,7 +18,7 @@ export default function MurabbiLayout({ children }: { children: React.ReactNode 
 
   return (
     <Box minH="100vh" pt="4px" pb="80px">
-      <WarningModal/>
+      {/* <WarningModal/> */}
       {/* <Header title={title} /> */}
       {children}
       <BottomNav />

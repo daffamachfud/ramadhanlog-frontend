@@ -13,8 +13,8 @@ const bottomNavItems = {
   ],
   murabbi: [
     { label: "Dashboard", icon: <Home size={20} />, path: "/murabbi" },
-    { label: "Halaqah", icon: <List size={20} />, path: "/murabbi/halaqah" },
     { label: "Laporan", icon: <BarChart size={20} />, path: "/murabbi/laporan-tholib" },
+    { label: "Halaqah", icon: <List size={20} />, path: "/murabbi/halaqah" },
     { label: "Profile", icon: <User size={20} />, path: "/murabbi/profile" },
   ],
   pengawas: [
