@@ -1,4 +1,4 @@
-import { Table, Thead, Tbody, Tr, Th, Td, Button, Box } from "@chakra-ui/react";
+import { Box, Table, Tbody, Tr, Td, Button, VStack, Text, Center } from "@chakra-ui/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import LaporanTholibDetail from "./LaporanTholibDetail";
@@ -9,34 +9,32 @@ export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib
   const router = useRouter();
 
   const goToDetail = (id: number, name: string) => {
-    const encodedName = encodeURIComponent(name); // Encode nama untuk URL
+    const encodedName = encodeURIComponent(name);
     router.push(`/murabbi/laporan-tholib/${id.toString()}?name=${encodedName}`);
   };
-  
+
   return (
     <Box overflowX="auto" w="full">
       <Table variant="simple" size="sm">
-        <Thead>
-          <Tr>
-            <Th>Nama</Th>
-            <Th>Halaqah</Th>
-            <Th>Aksi</Th>
-          </Tr>
-        </Thead>
         <Tbody>
           {laporan.map((tholib) => (
             <Tr key={tholib.id}>
-              <Td whiteSpace="nowrap">{tholib.name}</Td>
-              <Td whiteSpace="nowrap">{tholib.halaqah}</Td>
               <Td>
-                 {/* Navigasi ke halaman detail */}
-                 <Button 
-                  size="sm" 
-                  colorScheme="blue" 
-                  onClick={() => goToDetail(tholib.id, tholib.name)}
-                >
-                  Lihat Detail
-                </Button>
+                <VStack align="start" spacing={0}>
+                  <Text fontWeight="bold" fontSize="md">{tholib.name}</Text>
+                  <Text fontSize="xs" color="gray.500">{tholib.halaqah}</Text>
+                </VStack>
+              </Td>
+              <Td>
+                <Center>
+                  <Button 
+                    size="sm" 
+                    colorScheme="blue"
+                    onClick={() => goToDetail(tholib.id, tholib.name)}
+                  >
+                    Lihat Detail
+                  </Button>
+                </Center>
               </Td>
             </Tr>
           ))}
@@ -44,11 +42,11 @@ export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib
       </Table>
 
       {selectedTholib && (
-  <LaporanTholibDetail
-    params={{ tholibId: String(selectedTholib.id) }} // Ubah ke format params yang sesuai
-    onClose={() => setSelectedTholib(null)}
-  />
-)}
+        <LaporanTholibDetail
+          params={{ tholibId: String(selectedTholib.id) }}
+          onClose={() => setSelectedTholib(null)}
+        />
+      )}
     </Box>
   );
 }
