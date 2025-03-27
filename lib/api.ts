@@ -25,4 +25,6 @@ export const api = {
   getPengawasReported: `${API_URL}/dashboard/pengawas/reported`,
   getPengawasUnreported: `${API_URL}/dashboard/pengawas/unreported`,
 
+  getWrapped: `${API_URL}/wrapped/get`,
+
 };
