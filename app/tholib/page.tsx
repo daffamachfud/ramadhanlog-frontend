@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, VStack, SimpleGrid, Text } from "@chakra-ui/react";
+import { Box, VStack, SimpleGrid, Flex, Icon, Text } from "@chakra-ui/react";
 import DailySummary from "./components/DailySummary";
 import AmalanChart from "./components/AmalanChart";
 import ReminderHadist from "./components/ReminderHadist";
@@ -10,6 +10,9 @@ import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
 import moment from "moment-hijri";
 import PrayerTimesHeader from "./components/PrayerTimesHeader";
+import { useRouter } from "next/navigation";
+import { FaChartBar } from "react-icons/fa";
+import { ChevronRightIcon } from "@chakra-ui/icons";
 
 const TholibDashboard = () => {
   // State untuk ringkasan amalan harian dan mingguan
@@ -28,6 +31,8 @@ const TholibDashboard = () => {
     { name: string; completed: boolean }[]
   >([]);
 
+  const router = useRouter();
+
   const [prayerTimes, setPrayerTimes] = useState<{
     Subuh: string;
     Dzuhur: string;
@@ -41,7 +46,7 @@ const TholibDashboard = () => {
     Ashar: "-",
     Maghrib: "-",
     Isya: "-",
-    HijriDate: "-"
+    HijriDate: "-",
   });
 
   // Simulasi pengambilan data dari API
@@ -50,10 +55,10 @@ const TholibDashboard = () => {
       try {
         const cookies = parseCookies();
         const token = cookies.token;
-        if (!token){
+        if (!token) {
           window.location.href = "https://haizumapp.com";
           return;
-        } 
+        }
 
         const response = await fetch(api.dashboardTholib, {
           headers: {
@@ -112,9 +117,31 @@ const TholibDashboard = () => {
   return (
     <Box p={6}>
       <PrayerTimesHeader prayerTimes={prayerTimes} />
-  
+
       <VStack spacing={6} align="stretch">
         {/* Ringkasan Amalan Mingguan dan Harian */}
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          p={4}
+          borderRadius="lg"
+          boxShadow="sm"
+          bg="white"
+          cursor="pointer"
+          onClick={() => router.push("/wrapped")}
+          _hover={{ boxShadow: "md", bg: "gray.100" }}
+        >
+          <Flex align="center">
+            <Icon as={FaChartBar} boxSize={6} color="blue.500" mr={3} />{" "}
+            {/* Icon Laporan */}
+            <Text fontSize="sm" fontWeight="medium" color="gray.700">
+              Lihat Raport Ramadhan
+            </Text>
+          </Flex>
+          <ChevronRightIcon boxSize={6} color="gray.500" />
+        </Box>
+
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
           <DailySummary
             totalAmalan={dailyData.totalAmalan}

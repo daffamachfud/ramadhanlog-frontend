@@ -16,7 +16,8 @@ import {
   VStack,
   HStack,
   Badge,
-  Divider,
+  Flex,
+  Icon
 } from "@chakra-ui/react";
 import withAuth from "@/app/utils/withAuth";
 import { useState, useEffect } from "react";
@@ -25,6 +26,8 @@ import { parseCookies } from "nookies";
 import moment from "moment-hijri";
 import { useRouter } from "next/navigation"; // Import Next.js router
 import PrayerTimesHeader from "../tholib/components/PrayerTimesHeader";
+import { ChevronRightIcon } from "@chakra-ui/icons";
+import { FaChartBar } from "react-icons/fa";
 
 moment.locale("en");
 
@@ -141,6 +144,29 @@ const DashboardMurabbi = () => {
     <Box p={6}>
       {/* <Heading mb={4}>Dashboard Murabbi</Heading> */}
       <PrayerTimesHeader prayerTimes={prayerTimes} />
+
+      <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          p={4}
+          borderRadius="lg"
+          boxShadow="sm"
+          bg="white"
+          mb={4} 
+          cursor="pointer"
+          onClick={() => router.push("/wrapped")}
+          _hover={{ boxShadow: "md", bg: "gray.100" }}
+        >
+          <Flex align="center">
+            <Icon as={FaChartBar} boxSize={6} color="blue.500" mr={3} />{" "}
+            {/* Icon Laporan */}
+            <Text fontSize="sm" fontWeight="medium" color="gray.700">
+              Lihat Raport Ramadhan
+            </Text>
+          </Flex>
+          <ChevronRightIcon boxSize={6} color="gray.500" />
+        </Box>
 
       {/* Ringkasan Laporan */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
