@@ -45,6 +45,7 @@ const DashboardMurabbi = () => {
 
   const [prayerTimes, setPrayerTimes] = useState<{
     Subuh: string;
+    Terbit: string;
     Dzuhur: string;
     Ashar: string;
     Maghrib: string;
@@ -52,6 +53,7 @@ const DashboardMurabbi = () => {
     HijriDate: string;
   }>({
     Subuh: "-",
+    Terbit:  "-",
     Dzuhur: "-",
     Ashar: "-",
     Maghrib: "-",
@@ -100,6 +102,7 @@ const DashboardMurabbi = () => {
            if (data.data.prayerTimes) {
             setPrayerTimes({
               Subuh: data.data.prayerTimes.Subuh || "-",
+              Terbit: data.data.prayerTimes.Terbit || "-",
               Dzuhur: data.data.prayerTimes.Dzuhur || "-",
               Ashar: data.data.prayerTimes.Ashar || "-",
               Maghrib: data.data.prayerTimes.Maghrib || "-",
