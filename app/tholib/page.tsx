@@ -35,6 +35,7 @@ const TholibDashboard = () => {
 
   const [prayerTimes, setPrayerTimes] = useState<{
     Subuh: string;
+    Terbit: string;
     Dzuhur: string;
     Ashar: string;
     Maghrib: string;
@@ -42,6 +43,7 @@ const TholibDashboard = () => {
     HijriDate: string;
   }>({
     Subuh: "-",
+    Terbit: "-",
     Dzuhur: "-",
     Ashar: "-",
     Maghrib: "-",
@@ -113,9 +115,8 @@ const TholibDashboard = () => {
   moment.locale("en");
 
   // Format tanggal Hijriah dengan nama bulan dalam huruf Latin
-  const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
   return (
-    <Box p={6}>
+    <Box >
       <PrayerTimesHeader prayerTimes={prayerTimes} />
 
       <VStack spacing={6} align="stretch">
