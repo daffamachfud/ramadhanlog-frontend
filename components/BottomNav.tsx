@@ -7,7 +7,7 @@ import { Home, User, BookOpen, List, BarChart } from "lucide-react";
 const bottomNavItems = {
   tholib: [
     { label: "Home", icon: <Home size={20} />, path: "/tholib" },
-    { label: "Catat", icon: <BookOpen size={20} />, path: "/tholib/catat-amalan" },
+    { label: "Amalan", icon: <BookOpen size={20} />, path: "/tholib/amalan" },
     { label: "Laporan", icon: <BarChart size={20} />, path: "/tholib/laporan-amalan" },
     { label: "Profile", icon: <User size={20} />, path: "/tholib/profile" },
   ],

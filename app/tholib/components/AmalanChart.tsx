@@ -17,10 +17,11 @@ const getColor = (value: number) => {
 };
 
 const AmalanChart: React.FC<AmalanChartProps> = ({ data }) => {
+  console.log("Hasil amalan chart : ",data)
   return (
     <Box p={3} bg="white" borderRadius="lg" boxShadow="md" fontWeight="bold">
       <Text fontSize="sm" mb={2}>
-        Amalan Bulan : Ramadhan 1446 H
+        Amalan Bulan : Syawal 1446 H
       </Text>
 
       {/* 🔹 Grid dengan Label Tanggal */}

@@ -1,5 +1,4 @@
 "use client";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
   Spinner,
@@ -20,48 +19,43 @@ import {
   ModalBody,
   ModalFooter,
 } from "@chakra-ui/react";
-import { ArrowBackIcon, QuestionIcon } from "@chakra-ui/icons";
+import { QuestionIcon } from "@chakra-ui/icons";
 import { useEffect, useState, useRef } from "react";
-import { fetchAmalanLaporanTholib } from "@/app/pengawas/laporan-tholib/laporanTholibService"; // Service API
+import { fetchAmalanLaporanTholib } from "@/app/pengawas/laporan-tholib/laporanTholibService";
 import AmalanChart from "@/app/tholib/components/AmalanChart";
 
 export default function LaporanAmalanPage() {
-  const router = useRouter();
-  const params = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [selectedHijriDate, setSelectedHijriDate] = useState<string | null>(
-    null
-  );
+  const [selectedHijriDate, setSelectedHijriDate] = useState<string>("");
   const [availableDates, setAvailableDates] = useState<string[]>([]);
-  const [chartData, setChartData] = useState<{ name: string; value: number }[]>(
-    []
-  );
+  const [chartData, setChartData] = useState<{ name: string; value: number }[]>([]);
   const [amalanList, setAmalanList] = useState<
     { nama_amalan: string; description: string; status: boolean }[]
   >([]);
+  const [name, setName] = useState<string>("");
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [name, setName] = useState<string | null>(
-    null
-  );
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [hijriCurrentDate, setHijriCurrentDate] = useState<string>("");
 
+  // Fetch pertama kali
   useEffect(() => {
     async function loadInitialData() {
       try {
         setLoading(true);
         const response = await fetchAmalanLaporanTholib("");
-  
+
+        console.log("📦 Initial Response from API:");
+        console.log("🟢 Hijri Current Date:", response?.hijri_current_date);
+        console.log("📅 Button Dates:", response?.button_dates);
+        console.log("📊 Line Chart:", response?.line_chart);
+        console.log("📋 Amalan List:", response?.amalan_list);
+
         if (response) {
-          console.log("📌 API Initial Response:", response);
           setChartData(response.line_chart || []);
           setAvailableDates(response.button_dates || []);
-  
-          if (!selectedHijriDate && response.hijri_current_date) {
-            console.log("🟢 Set Default Hijri Date:", response.hijri_current_date);
-            setSelectedHijriDate(response.hijri_current_date);
-          }
-  
           setAmalanList(response.amalan_list || []);
-          setName(response.name || "")
+          setName(response.name || "");
+          setHijriCurrentDate(response.hijri_current_date || "");
         }
       } catch (error) {
         console.error("❌ Gagal mengambil laporan:", error);
@@ -69,25 +63,41 @@ export default function LaporanAmalanPage() {
         setLoading(false);
       }
     }
-  
+
     loadInitialData();
-  }, []); // 🔥 Hanya dijalankan saat pertama kali render (tanpa id)
-  
-  // 🔥 Trigger API ulang setelah `selectedHijriDate` tersedia
+  }, []);
+
+  // Set default selectedHijriDate setelah availableDates diisi
+  useEffect(() => {
+    if (availableDates.length > 0 && selectedHijriDate === "") {
+      const defaultDate = availableDates.find((date) =>
+        hijriCurrentDate.startsWith(date)
+      ) || availableDates[availableDates.length - 1];
+
+      console.log("📌 Auto-pilih default date:", defaultDate);
+      setSelectedHijriDate(defaultDate);
+    }
+  }, [availableDates, hijriCurrentDate]);
+
+  // Fetch ulang saat selectedHijriDate berubah
   useEffect(() => {
     if (!selectedHijriDate) return;
-  
+
     async function reloadWithHijriDate() {
       try {
         setLoading(true);
-        console.log("🔥 API Dipanggil ulang dengan selectedHijriDate:", selectedHijriDate);
-        const response = await fetchAmalanLaporanTholib(selectedHijriDate || "");
-  
+        console.log("🔁 Fetch ulang untuk tanggal:", selectedHijriDate);
+
+        const response = await fetchAmalanLaporanTholib(selectedHijriDate);
+
+        console.log("📦 Response from API untuk tanggal:", selectedHijriDate);
+        console.log("📊 Line Chart:", response?.line_chart);
+        console.log("📋 Amalan List:", response?.amalan_list);
+
         if (response) {
-          console.log("📌 API Response with Date:", response);
           setChartData(response.line_chart || []);
           setAmalanList(response.amalan_list || []);
-          setName(response.name || "")
+          setName(response.name || "");
         }
       } catch (error) {
         console.error("❌ Gagal mengambil laporan dengan tanggal:", error);
@@ -95,26 +105,19 @@ export default function LaporanAmalanPage() {
         setLoading(false);
       }
     }
-  
+
     reloadWithHijriDate();
-  }, [selectedHijriDate]); // ✅ Hanya tergantung pada selectedHijriDate
+  }, [selectedHijriDate]);
 
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-
+  // Scroll ke button aktif
   useEffect(() => {
     if (scrollRef.current && selectedHijriDate) {
-      const selectedDay = selectedHijriDate.split(" ")[0].trim();
-      console.log("🟢 Selected Day:", selectedDay);
-
-      // ✅ Cari button berdasarkan data-day (bukan textContent)
+      const selectedDay = selectedHijriDate.split(" ")[0];
       const selectedButton = scrollRef.current.querySelector(
         `button[data-day="${selectedDay}"]`
       );
 
-      console.log(
-        "🔴 Selected Button Found:",
-        selectedButton ? "✅ Yes" : "❌ No"
-      );
+      console.log("🧭 Auto-scroll ke tanggal:", selectedDay, "| Found:", !!selectedButton);
 
       selectedButton?.scrollIntoView({
         behavior: "smooth",
@@ -122,13 +125,17 @@ export default function LaporanAmalanPage() {
         block: "nearest",
       });
     }
-  }, [selectedHijriDate]); // 🔥 Jalankan setiap kali tanggal berubah
+  }, [selectedHijriDate]);
+
+  // Debug log render
+  console.log("🧪 Render State:");
+  console.log("✅ selectedHijriDate:", selectedHijriDate);
+  console.log("📆 availableDates:", availableDates);
 
   return (
     <Box p={4} borderWidth={1} borderRadius="lg" mt={4}>
-      {/* Tombol Kembali */}
-      <HStack spacing={2} justify="space" mb={4}>
-          <Heading size="sm">{name}</Heading>
+      <HStack spacing={2} justify="space-between" mb={4}>
+        <Heading size="sm">Laporan - {name}</Heading>
         <IconButton
           icon={<QuestionIcon />}
           aria-label="Help"
@@ -139,61 +146,37 @@ export default function LaporanAmalanPage() {
         />
       </HStack>
 
-      {/* Line Chart */}
       <Box mt={4}>
         <AmalanChart data={chartData} />
       </Box>
 
-      {/* Tombol Ramadhan Horizontal */}
       <Box mt={4} overflowX="auto" whiteSpace="nowrap" ref={scrollRef}>
         <HStack spacing={2} width="max-content">
           {availableDates.map((date, index) => {
-            const day = date.split(" ")[0]; // Ambil angka saja, contoh "13"
-            const isSelected = selectedHijriDate === date; // 🔥 Pastikan hanya satu button yang dipilih
+            const [day, month] = date.split(" ");
+            const isSelected = selectedHijriDate === date;
 
             return (
               <Button
                 key={`date-${index}`}
                 size="sm"
-                variant={
-                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
-                    ? "solid"
-                    : "outline"
-                } // ✅ Bandingkan hanya "13 Ramadhan"
-                colorScheme={
-                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
-                    ? "blue"
-                    : "gray"
-                }
-                className={
-                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
-                    ? "selected-date"
-                    : ""
-                }
+                variant={isSelected ? "solid" : "outline"}
+                colorScheme={isSelected ? "blue" : "gray"}
                 onClick={() => {
-                  console.log(
-                    "🔵 Button Clicked:",
-                    date,
-                    "🔥 Selected Hijri Date Sebelumnya:",
-                    selectedHijriDate
-                  );
+                  console.log("🖱️ Klik tanggal:", date);
                   setSelectedHijriDate(date);
                 }}
                 flexDirection="column"
                 height="50px"
                 borderRadius="md"
-                data-day={day} // ✅ Tambahkan atribut data-day
+                data-day={day}
               >
                 <Text
                   fontSize="xs"
                   fontWeight="bold"
-                  color={
-                    selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
-                      ? "white"
-                      : "gray.400"
-                  }
+                  color={isSelected ? "white" : "gray.400"}
                 >
-                  Rmd
+                  {month}
                 </Text>
                 <Text fontSize="md">{day}</Text>
               </Button>
@@ -202,44 +185,42 @@ export default function LaporanAmalanPage() {
         </HStack>
       </Box>
 
-      {/* List Amalan dalam Dua Kolom */}
-  <Box mt={8}>
-  {loading ? (
-    <Spinner size="lg" mt={4} />
-  ) : amalanList.length > 0 ? (
-    <SimpleGrid columns={[1, 2]} spacing={4}> {/* 1 kolom di mobile, 2 di tablet/desktop */}
-      {amalanList.map((item, index) => (
-        <Box
-          key={index}
-          p={3}
-          borderWidth="1px"
-          borderRadius="md"
-          boxShadow="md"
-          bg="gray.50"
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <VStack align="start" spacing={1} flex="1">
-            <Text fontWeight="bold" fontSize="sm">
-              {item.nama_amalan}
-            </Text>
-            <Text fontSize="xs" color="gray.600">
-              {item.description}
-            </Text>
-          </VStack>
-          <Badge colorScheme={item.status ? "green" : "red"}>
-            {item.status ? "Selesai" : "Belum"}
-          </Badge>
-        </Box>
-      ))}
-    </SimpleGrid>
-  ) : (
-    <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
-  )}
-</Box>
+      <Box mt={8}>
+        {loading ? (
+          <Spinner size="lg" mt={4} />
+        ) : amalanList.length > 0 ? (
+          <SimpleGrid columns={[1, 2]} spacing={4}>
+            {amalanList.map((item, index) => (
+              <Box
+                key={index}
+                p={3}
+                borderWidth="1px"
+                borderRadius="md"
+                boxShadow="md"
+                bg="gray.50"
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <VStack align="start" spacing={1} flex="1">
+                  <Text fontWeight="bold" fontSize="sm">
+                    {item.nama_amalan}
+                  </Text>
+                  <Text fontSize="xs" color="gray.600">
+                    {item.description}
+                  </Text>
+                </VStack>
+                <Badge colorScheme={item.status ? "green" : "red"}>
+                  {item.status ? "Selesai" : "Belum"}
+                </Badge>
+              </Box>
+            ))}
+          </SimpleGrid>
+        ) : (
+          <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
+        )}
+      </Box>
 
-      {/* Modal Help */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -247,8 +228,9 @@ export default function LaporanAmalanPage() {
           <ModalCloseButton />
           <ModalBody>
             <Text>
-            Laporan ini menampilkan grafik amalan dari bulan ramadhan.
-            Untuk data lengkap nya bisa pilih per tanggal yang bisa dipilih
+              Laporan ini menampilkan grafik amalan selama 30 hari terakhir
+              berdasarkan kalender Hijriah. Kamu bisa memilih tanggal tertentu
+              untuk melihat detailnya.
             </Text>
           </ModalBody>
           <ModalFooter>
