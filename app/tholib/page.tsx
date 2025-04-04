@@ -11,15 +11,20 @@ import { parseCookies } from "nookies";
 import moment from "moment-hijri";
 import PrayerTimesHeader from "./components/PrayerTimesHeader";
 import { useRouter } from "next/navigation";
-import { FaChartBar } from "react-icons/fa";
-import { ChevronRightIcon } from "@chakra-ui/icons";
+import {
+  FaChartBar,
+  FaPen,
+  FaQuran,
+  FaBookOpen,
+  FaHands,
+} from "react-icons/fa";
 
 const TholibDashboard = () => {
   // State untuk ringkasan amalan harian dan mingguan
   const [dailyData, setDailyData] = useState({
     totalAmalan: 20,
     completedAmalan: 0,
-  }); // Total 20 amalan
+  });
   const [loading, setLoading] = useState(true);
   // Data untuk chart mingguan
   const [chartData, setChartData] = useState<{ name: string; value: number }[]>(
@@ -80,7 +85,7 @@ const TholibDashboard = () => {
 
         // Update state dengan data dari backend
         setDailyData({
-          totalAmalan: 20, // Total tetap 21
+          totalAmalan: 20,
           completedAmalan: ringkasanHarian.completed,
         });
 
@@ -112,48 +117,124 @@ const TholibDashboard = () => {
 
   moment.locale("en");
 
-  // Format tanggal Hijriah dengan nama bulan dalam huruf Latin
-  const hijriDate = moment().format("iD iMMMM iYYYY") + " H";
   return (
-    <Box p={6}>
+    <Box>
       <PrayerTimesHeader prayerTimes={prayerTimes} />
 
       <VStack spacing={6} align="stretch">
         {/* Ringkasan Amalan Mingguan dan Harian */}
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          p={4}
-          borderRadius="lg"
-          boxShadow="sm"
-          bg="white"
-          cursor="pointer"
-          onClick={() => router.push("/wrapped")}
-          _hover={{ boxShadow: "md", bg: "gray.100" }}
-        >
-          <Flex align="center">
-            <Icon as={FaChartBar} boxSize={6} color="blue.500" mr={3} />{" "}
-            {/* Icon Laporan */}
-            <Text fontSize="sm" fontWeight="medium" color="gray.700">
-              Lihat Raport Ramadhan
-            </Text>
-          </Flex>
-          <ChevronRightIcon boxSize={6} color="gray.500" />
-        </Box>
 
+        {/* Tambahan grid tombol menu */}
+        <SimpleGrid columns={4} spacing={4} mt={4} px={4}>
+          {[
+            {
+              title: "Catat Amalan",
+              icon: FaPen,
+              link: "/tholib/catat-amalan",
+            },
+            {
+              title: "Al-Qur'an",
+              icon: FaQuran,
+              link: "/quran",
+              isComingSoon: true,
+            },
+            {
+              title: "Hadist",
+              icon: FaBookOpen,
+              link: "/hadist",
+              isComingSoon: true,
+            },
+            { title: "Doa", icon: FaHands, link: "/doa", isComingSoon: true },
+            {
+              title: "Rapot Ramadhan",
+              icon: FaChartBar,
+              link: "/wrapped",
+              isNew: true,
+            },
+          ].map((item, index) => (
+            <Box
+              key={index}
+              as="button"
+              onClick={() => {
+                if (item.isComingSoon) {
+                  alert(
+                    "Fitur ini sedang dalam proses pengembangan. InsyaAllah segera hadir untuk menemani ibadahmu. Mohon doanya ya 🙏"
+                  );
+                } else {
+                  router.push(item.link);
+                }
+              }}
+              bg="white"
+              p={2}
+              borderRadius="md"
+              boxShadow="sm"
+              _hover={{ bg: "gray.100", boxShadow: "md" }}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              position="relative"
+            >
+              <Icon as={item.icon} boxSize={5} color="blue.500" />
+              <Text
+                mt={1}
+                fontSize="x-small"
+                fontWeight="medium"
+                color="gray.700"
+              >
+                {item.title}
+              </Text>
+
+              {/* Badge "Baru" */}
+              {item.isNew && (
+                <Box
+                  position="absolute"
+                  top="0"
+                  right="0"
+                  bg="red.500"
+                  color="white"
+                  fontSize="xx-small"
+                  fontWeight="bold"
+                  px={2}
+                  py={0.5}
+                  borderRadius="full"
+                  transform="translate(30%, -30%)"
+                  boxShadow="md"
+                >
+                  Baru
+                </Box>
+              )}
+
+              {/* Badge "Coming Soon" */}
+              {item.isComingSoon && (
+                <Box
+                  position="absolute"
+                  top="0"
+                  right="0"
+                  bg="yellow.400"
+                  color="black"
+                  fontSize="6px"
+                  fontWeight="bold"
+                  px={1.5}
+                  py={0.5}
+                  borderRadius="full"
+                  transform="translate(30%, -30%)"
+                  boxShadow="md"
+                >
+                  Coming Soon
+                </Box>
+              )}
+            </Box>
+          ))}
+        </SimpleGrid>
+
+        {/* Komponen lainnya bisa ditambahkan di sini */}
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
           <DailySummary
             totalAmalan={dailyData.totalAmalan}
             completedAmalan={dailyData.completedAmalan}
           />
         </SimpleGrid>
-
-        {/* Reminder Hadis */}
-        <ReminderHadist amalanList={amalanList} />
-
-        {/* Grafik Amalan Mingguan */}
-        <AmalanChart data={chartData} />
       </VStack>
     </Box>
   );

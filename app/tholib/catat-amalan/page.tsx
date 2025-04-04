@@ -10,7 +10,6 @@ import {
   VStack,
   Heading,
   Text,
-  Divider,
   Stack,
   Flex,
   useBreakpointValue,
@@ -52,19 +51,71 @@ export default function CatatAmalanPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [selectedAmalan, setSelectedAmalan] = useState<string[]>([]); // State untuk mengubah warna box
-  const [selectedValues, setSelectedValues] = useState<{
-    [key: string]: string;
-  }>({}); // Untuk nilai dropdown
-  const [hijriDate, setHijriDate] = useState<string>("-");
-  const [hijriDates, setHijriDates] = useState<{ hijri: string; masehi: string }[]>([]);
+  const [selectedAmalan, setSelectedAmalan] = useState<string[]>([]);
+  const [selectedValues, setSelectedValues] = useState<{ [key: string]: string }>({});
   const [selectedHijriDate, setSelectedHijriDate] = useState<string>("");
-  const [selectedMasehiDate, setSelectedMasehiDate] = useState<string>("");
+  const [hijriDates, setHijriDates] = useState<{ hijri: string }[]>([]);
   const toast = useToast();
   const cancelRef = useRef(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   moment.locale("en");
+
+  const hijriMonths = [
+    "Muharram", "Shafar", "Rabiul Awwal", "Rabiul Akhir",
+    "Jumadil Awwal", "Jumadil Akhir", "Rajab", "Sya'ban",
+    "Ramadhan", "Syawal", "Zulqaidah", "Zulhijjah"
+  ];
+
+  const generateHijriRange = (startDay: number, startMonth: string, startYear: number, total: number) => {
+    const dates: string[] = [];
+    let day = startDay;
+    let month = hijriMonths.indexOf(startMonth);
+    let year = startYear;
+  
+    for (let i = 0; i < total; i++) {
+      dates.push(`${day} ${hijriMonths[month]} ${year}`);
+      day++;
+  
+      if (day > 30) {
+        day = 1;
+        month++;
+        if (month > 11) {
+          month = 0;
+          year++;
+        }
+      }
+    }
+  
+    return dates.map(d => ({ hijri: d }));
+  };
+
+  useEffect(() => {
+    const fetchInitialHijriRange = async () => {
+      try {
+        const response = await fetch("https://api.myquran.com/v2/cal/hijr/?adj=-10");
+        const result = await response.json();
+        if (!result.status) throw new Error("Gagal ambil tanggal dari API");
+  
+        const [, hijriText] = result.data.date; // "26 Ramadhan 1446 H"
+        const [dayStr, monthStr, yearStr] = hijriText.replace(" H", "").split(" ");
+        const day = parseInt(dayStr);
+        const month = monthStr;
+        const year = parseInt(yearStr);
+  
+        const hijriRange = generateHijriRange(day, month, year, 11); // 26 Ramadhan s/d 5 Syawal
+        setHijriDates(hijriRange);
+  
+        // Set default langsung ke 5 Syawal 1446
+        setSelectedHijriDate("5 Syawal 1446");
+      } catch (err) {
+        console.error("Gagal fetch hijri range:", err);
+        setError("Gagal mengambil rentang tanggal Hijriah.");
+      }
+    };
+  
+    fetchInitialHijriRange();
+  }, []);
 
   useEffect(() => {
     const fetchAmalan = async () => {
@@ -76,8 +127,7 @@ export default function CatatAmalanPage() {
           setLoading(false);
           return;
         }
-  
-        // ✅ Ambil data dari backend berdasarkan tanggal Hijriah yang dipilih
+
         const response = await fetch(
           `${api.getAmalanHarian}${selectedHijriDate ? `?hijriDate=${selectedHijriDate}` : ""}`,
           {
@@ -88,44 +138,12 @@ export default function CatatAmalanPage() {
             credentials: "include",
           }
         );
-  
+
         const data = await response.json();
         if (!data.success) throw new Error(data.message);
-  
-        console.log("📅 Data hijriDate yang diterima:", data.hijriDate);
-  
-        // ✅ Pastikan semua tanggal tetap ada dan hanya tambahkan yang baru
-        setHijriDates((prevHijriDates) => {
-          const maxHijriDate = parseInt(data.hijriDate.split(" ")[0]); // Ambil angka tanggal
-          const hijriMonth = data.hijriDate.split(" ")[1]; // Bulan Hijriah
-          const hijriYear = data.hijriDate.split(" ")[2]; // Tahun Hijriah
-          
-          const newDates = [];
-          for (let i = 1; i <= maxHijriDate; i++) {
-            const hijriString = `${i} ${hijriMonth} ${hijriYear}`;
-            const masehiDate = moment(hijriString, "iD iMMMM iYYYY").format("YYYY-MM-DD");
-  
-            // ✅ Hanya tambahkan jika belum ada di daftar
-            if (!prevHijriDates.some((date) => date.hijri === hijriString)) {
-              newDates.push({ hijri: hijriString, masehi: masehiDate });
-            }
-          }
-  
-          return [...prevHijriDates, ...newDates].sort((a, b) => 
-            parseInt(a.hijri.split(" ")[0]) - parseInt(b.hijri.split(" ")[0])
-          );
-        });
-  
-        // ✅ Set default tanggal hanya jika belum ada pilihan
-        if (!selectedHijriDate) {
-          setSelectedHijriDate(data.hijriDate);
-          const masehiDate = moment(data.hijriDate, "iD iMMMM iYYYY").format("YYYY-MM-DD");
-          setSelectedMasehiDate(masehiDate);
-        }
-  
-        // ✅ Update daftar amalan
+
         const parentIds = new Set(data.data.map((item: any) => item.parentId).filter(Boolean));
-  
+
         setAmalan(
           data.data.map((item: any) => ({
             id: item.id,
@@ -139,8 +157,7 @@ export default function CatatAmalanPage() {
             isParent: parentIds.has(item.id),
           }))
         );
-  
-        // ✅ Simpan nilai dropdown yang sudah dipilih sebelumnya
+
         const initialSelectedValues: { [key: string]: string } = {};
         data.data.forEach((item: any) => {
           if (item.type === "dropdown" && item.nilai) {
@@ -148,20 +165,17 @@ export default function CatatAmalanPage() {
           }
         });
         setSelectedValues(initialSelectedValues);
-  
       } catch (err) {
         setError("Gagal mengambil daftar amalan");
       } finally {
         setLoading(false);
       }
     };
-  
-    fetchAmalan();
 
-    setSelectedAmalan([]); // Reset checklist setiap tanggal berubah
-  setSelectedValues({}); // Reset nilai dropdown juga
-  }, [selectedHijriDate]);  
-    
+    fetchAmalan();
+    setSelectedAmalan([]);
+    setSelectedValues({});
+  }, [selectedHijriDate]);
 
   const toggleChecklist = (index: number) => {
     const updatedAmalan = [...amalan];
@@ -178,7 +192,7 @@ export default function CatatAmalanPage() {
   const handleDropdownChange = (index: number, value: string) => {
     const updatedAmalan = [...amalan];
     updatedAmalan[index].done = value !== "Tidak Melakukan";
-    updatedAmalan[index].nilai = value; // ✅ Simpan nilai ke state utama
+    updatedAmalan[index].nilai = value;
     setAmalan(updatedAmalan);
 
     setSelectedValues((prev) => ({
@@ -195,15 +209,12 @@ export default function CatatAmalanPage() {
       return;
     }
 
-    const selectedAmalanData = amalan
-      .map((item) => ({
-        id: item.id,
-        nama: item.nama,
-        done: item.done, // ✅ Kirim status done agar backend tahu jika ada yang di-uncheck
-        nilai: item.type === "dropdown" ? item.nilai || "" : "", // ✅ Kirim nilai yang tersimpan
-      }));
-
-    console.log("hasil submit", selectedAmalanData);
+    const selectedAmalanData = amalan.map((item) => ({
+      id: item.id,
+      nama: item.nama,
+      done: item.done,
+      nilai: item.type === "dropdown" ? item.nilai || "" : "",
+    }));
 
     if (selectedAmalanData.length === 0) {
       toast({
@@ -258,39 +269,20 @@ export default function CatatAmalanPage() {
 
   return (
     <Box minH="100vh" p={4} bg="gray.100">
-      <Box
-        w={boxWidth}
-        mx="auto"
-        p={6}
-        bg="white"
-        boxShadow="md"
-        borderRadius="md"
-      >
+      <Box w={boxWidth} mx="auto" p={6} bg="white" boxShadow="md" borderRadius="md">
         <Flex justify="space-between" align="center" mb={4}>
-          {/* Ikon Kalender + Judul */}
           <Flex align="center">
             <FaCalendarAlt size={20} style={{ marginRight: "8px" }} />
             <Heading size="md">Catat Amalan Harian</Heading>
           </Flex>
-
-          {/* Ikon Help */}
-          <FaQuestionCircle
-            size={20}
-            cursor="pointer"
-            onClick={onOpen}
-            color="blue"
-          />
+          <FaQuestionCircle size={20} cursor="pointer" onClick={onOpen} color="blue" />
         </Flex>
 
         <Select
           value={selectedHijriDate}
           onChange={(e) => {
-            const hijriDate = e.target.value;
-            const masehiDate =
-              hijriDates.find((d) => d.hijri === hijriDate)?.masehi || "";
-            setSelectedHijriDate(hijriDate);
-            setSelectedMasehiDate(masehiDate);
-            setLoading(true); // 🔹 Agar tampilan menunjukkan "Memuat..." sebelum data baru masuk
+            setSelectedHijriDate(e.target.value);
+            setLoading(true);
           }}
           mt={2}
         >
@@ -319,18 +311,16 @@ export default function CatatAmalanPage() {
                 borderRadius="md"
                 bg={
                   item.isParent
-                    ? "gray.200" // ✅ Jika parent, abu-abu
+                    ? "gray.200"
                     : item.done
-                    ? "green.100" // ✅ Jika amalan sudah "done", hijau
+                    ? "green.100"
                     : selectedAmalan.includes(item.id)
                     ? "green.100"
-                    : "white" // ✅ Jika dipilih, hijau juga
+                    : "white"
                 }
-                cursor={item.isParent ? "default" : "pointer"} // ✅ Parent tidak bisa diklik
-                _hover={item.isParent ? {} : { bg: "green.50" }} // ✅ Hover hanya untuk anak
-                onClick={
-                  item.isParent ? undefined : () => toggleChecklist(index)
-                } // ✅ Hanya bisa klik jika bukan parent
+                cursor={item.isParent ? "default" : "pointer"}
+                _hover={item.isParent ? {} : { bg: "green.50" }}
+                onClick={item.isParent ? undefined : () => toggleChecklist(index)}
               >
                 <Flex justify="space-between" align="center">
                   <Box>
@@ -341,22 +331,15 @@ export default function CatatAmalanPage() {
                       </Text>
                     )}
                   </Box>
-                  {item.type === "checklist" &&
-                    !item.isParent && ( // ✅ Hanya tampil jika bukan parent
-                      <Checkbox
-                        isChecked={item.done}
-                        onChange={() => toggleChecklist(index)}
-                        pointerEvents="none"
-                      />
-                    )}
+                  {item.type === "checklist" && !item.isParent && (
+                    <Checkbox isChecked={item.done} onChange={() => toggleChecklist(index)} pointerEvents="none" />
+                  )}
                 </Flex>
                 {item.type === "dropdown" && (
                   <Select
                     placeholder="Pilih opsi"
-                    value={selectedValues[item.id] || ""} // ✅ Menampilkan nilai yang sudah tersimpan
-                    onChange={(e) =>
-                      handleDropdownChange(index, e.target.value)
-                    }
+                    value={selectedValues[item.id] || ""}
+                    onChange={(e) => handleDropdownChange(index, e.target.value)}
                     mt={2}
                   >
                     {item.options?.map((option, optIndex) => (
@@ -381,25 +364,14 @@ export default function CatatAmalanPage() {
         )}
       </Box>
 
-      <AlertDialog
-        isOpen={isConfirmOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={() => setIsConfirmOpen(false)}
-      >
+      <AlertDialog isOpen={isConfirmOpen} leastDestructiveRef={cancelRef} onClose={() => setIsConfirmOpen(false)}>
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader>Konfirmasi</AlertDialogHeader>
-            <AlertDialogBody>
-              Apakah Anda yakin ingin menyimpan amalan hari ini?
-            </AlertDialogBody>
+            <AlertDialogBody>Apakah Anda yakin ingin menyimpan amalan hari ini?</AlertDialogBody>
             <AlertDialogFooter>
               <Button onClick={() => setIsConfirmOpen(false)}>Batal</Button>
-              <Button
-                colorScheme="blue"
-                ml={3}
-                onClick={handleSubmit}
-                isLoading={isSubmitting}
-              >
+              <Button colorScheme="blue" ml={3} onClick={handleSubmit} isLoading={isSubmitting}>
                 Simpan
               </Button>
             </AlertDialogFooter>
@@ -407,7 +379,6 @@ export default function CatatAmalanPage() {
         </AlertDialogOverlay>
       </AlertDialog>
 
-      {/* Modal Help */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -415,9 +386,8 @@ export default function CatatAmalanPage() {
           <ModalCloseButton />
           <ModalBody>
             <Text>
-              Input catatan amalan dengan batas waktu matahari terbit. Tetapi
-              bisa memilih tanggal jika sebelumnya lupa atau belum melakukan
-              catatan amalan
+              Input catatan amalan dengan batas waktu matahari terbit. Tetapi bisa memilih tanggal jika sebelumnya lupa
+              atau belum melakukan catatan amalan
             </Text>
           </ModalBody>
           <ModalFooter>
