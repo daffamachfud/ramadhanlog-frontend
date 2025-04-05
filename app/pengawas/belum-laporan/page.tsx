@@ -38,6 +38,9 @@ const PageBelumLaporan = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [hijriDate, setHijriDate] = useState<string | null>(
+    null
+  );
 
   interface Tholib {
     id: string;
@@ -74,6 +77,9 @@ const PageBelumLaporan = () => {
         console.log("Data tholib belum laporan:", data);
 
         if (data.success && Array.isArray(data.data)) {
+          setHijriDate(
+            data.hijri_date
+          )
           setTholibList(
             data.data.map((t: any) => ({
               id: t.id,
@@ -111,8 +117,6 @@ const PageBelumLaporan = () => {
     };
     fetchData();
   }, []);
-
-  const hijriDate = moment().locale("en").format("iD iMMMM iYYYY") + " H";
 
   return (
     <Box p={6}>

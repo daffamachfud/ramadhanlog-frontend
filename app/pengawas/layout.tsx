@@ -17,7 +17,7 @@ export default function MurabbiLayout({ children }: { children: React.ReactNode 
     : "Dashboard Murabbi";
 
   return (
-    <Box minH="100vh" pt="4px" pb="80px">
+    <Box minH="100vh" pt="0px" pb="120px">
       {/* <WarningModal/> */}
       {/* <Header title={title} /> */}
       {children}
