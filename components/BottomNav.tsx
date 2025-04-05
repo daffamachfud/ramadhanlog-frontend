@@ -19,7 +19,7 @@ const bottomNavItems = {
   ],
   pengawas: [
     { label: "Dashboard", icon: <Home size={20} />, path: "/pengawas" }, // Sama dengan Murabbi
-    { label: "Catat", icon: <BookOpen size={20} />, path: "/pengawas/catat-amalan" }, // Sama dengan Tholib
+    { label: "Amalan", icon: <BookOpen size={20} />, path: "/pengawas/amalan" }, // Sama dengan Tholib
     { label: "Laporan", icon: <BarChart size={20} />, path: "/pengawas/laporan-tholib" }, // Sama dengan Murabbi
     { label: "Profile", icon: <User size={20} />, path: "/pengawas/profile" }, // Sama dengan Murabbi
   ],

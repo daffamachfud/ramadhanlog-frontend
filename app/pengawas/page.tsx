@@ -144,7 +144,7 @@ const DashboardMurabbi = () => {
   }
 
   return (
-    <Box p={6}>
+    <Box>
       {/* <Heading mb={4}>Dashboard Murabbi</Heading> */}
       <PrayerTimesHeader prayerTimes={prayerTimes} />
 
@@ -172,7 +172,7 @@ const DashboardMurabbi = () => {
         </Box>
 
       {/* Ringkasan Laporan */}
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} p = {6}>
         <Card
           bg="green.100"
           cursor="pointer"
@@ -230,7 +230,7 @@ const DashboardMurabbi = () => {
       </SimpleGrid>
 
       {/* Highlight Laporan Per Tholib */}
-      <Heading size="sm" mt={6} mb={4}>
+      <Heading size="sm" mt={6} mb={4} p = {4}>
         Highlight Laporan Hari Ini
       </Heading>
       <VStack align="stretch" spacing={4}>
