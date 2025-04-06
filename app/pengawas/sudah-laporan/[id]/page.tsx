@@ -45,22 +45,25 @@ export default function LaporanTholibDetail() {
 
   useEffect(() => {
     if (!id) return;
-  
+
     async function loadInitialData() {
       try {
         setLoading(true);
         const response = await fetchDetailLaporanTholib(id.toString(), "");
-  
+
         if (response) {
           console.log("📌 API Initial Response:", response);
           setChartData(response.line_chart || []);
           setAvailableDates(response.button_dates || []);
-  
+
           if (!selectedHijriDate && response.hijri_current_date) {
-            console.log("🟢 Set Default Hijri Date:", response.hijri_current_date);
+            console.log(
+              "🟢 Set Default Hijri Date:",
+              response.hijri_current_date
+            );
             setSelectedHijriDate(response.hijri_current_date);
           }
-  
+
           setAmalanList(response.amalan_list || []);
         }
       } catch (error) {
@@ -69,20 +72,26 @@ export default function LaporanTholibDetail() {
         setLoading(false);
       }
     }
-  
+
     loadInitialData();
   }, [id]); // ✅ Load hanya saat `id` berubah
-  
+
   // 🔥 Trigger API ulang setelah `selectedHijriDate` tersedia
   useEffect(() => {
     if (!id || !selectedHijriDate) return;
-  
+
     async function reloadWithHijriDate() {
       try {
         setLoading(true);
-        console.log("🔥 API Dipanggil ulang dengan selectedHijriDate:", selectedHijriDate);
-        const response = await fetchDetailLaporanTholib(id.toString(), selectedHijriDate || "");
-  
+        console.log(
+          "🔥 API Dipanggil ulang dengan selectedHijriDate:",
+          selectedHijriDate
+        );
+        const response = await fetchDetailLaporanTholib(
+          id.toString(),
+          selectedHijriDate || ""
+        );
+
         if (response) {
           console.log("📌 API Response with Date:", response);
           setChartData(response.line_chart || []);
@@ -94,7 +103,7 @@ export default function LaporanTholibDetail() {
         setLoading(false);
       }
     }
-  
+
     reloadWithHijriDate();
   }, [id, selectedHijriDate]);
 
@@ -202,7 +211,7 @@ export default function LaporanTholibDetail() {
                       : "gray.400"
                   }
                 >
-                  Rmd
+                  {date.split(" ")[1]} {/* contoh: "Ramadhan", "Syawal", dst */}
                 </Text>
                 <Text fontSize="md">{day}</Text>
               </Button>
@@ -212,41 +221,43 @@ export default function LaporanTholibDetail() {
       </Box>
 
       {/* List Amalan dalam Dua Kolom */}
-  <Box mt={8}>
-  {loading ? (
-    <Spinner size="lg" mt={4} />
-  ) : amalanList.length > 0 ? (
-    <SimpleGrid columns={[1, 2]} spacing={4}> {/* 1 kolom di mobile, 2 di tablet/desktop */}
-      {amalanList.map((item, index) => (
-        <Box
-          key={index}
-          p={3}
-          borderWidth="1px"
-          borderRadius="md"
-          boxShadow="md"
-          bg="gray.50"
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <VStack align="start" spacing={1} flex="1">
-            <Text fontWeight="bold" fontSize="sm">
-              {item.nama_amalan}
-            </Text>
-            <Text fontSize="xs" color="gray.600">
-              {item.description}
-            </Text>
-          </VStack>
-          <Badge colorScheme={item.status ? "green" : "red"}>
-            {item.status ? "Selesai" : "Belum"}
-          </Badge>
-        </Box>
-      ))}
-    </SimpleGrid>
-  ) : (
-    <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
-  )}
-</Box>
+      <Box mt={8}>
+        {loading ? (
+          <Spinner size="lg" mt={4} />
+        ) : amalanList.length > 0 ? (
+          <SimpleGrid columns={[1, 2]} spacing={4}>
+            {" "}
+            {/* 1 kolom di mobile, 2 di tablet/desktop */}
+            {amalanList.map((item, index) => (
+              <Box
+                key={index}
+                p={3}
+                borderWidth="1px"
+                borderRadius="md"
+                boxShadow="md"
+                bg="gray.50"
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <VStack align="start" spacing={1} flex="1">
+                  <Text fontWeight="bold" fontSize="sm">
+                    {item.nama_amalan}
+                  </Text>
+                  <Text fontSize="xs" color="gray.600">
+                    {item.description}
+                  </Text>
+                </VStack>
+                <Badge colorScheme={item.status ? "green" : "red"}>
+                  {item.status ? "Selesai" : "Belum"}
+                </Badge>
+              </Box>
+            ))}
+          </SimpleGrid>
+        ) : (
+          <Text mt={4}>Tidak ada data amalan pada tanggal ini.</Text>
+        )}
+      </Box>
 
       {/* Modal Help */}
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -256,8 +267,9 @@ export default function LaporanTholibDetail() {
           <ModalCloseButton />
           <ModalBody>
             <Text>
-            Laporan ini menampilkan grafik amalan dari bulan ramadhan.
-            Untuk data lengkap nya bisa pilih per tanggal yang bisa dipilih
+              Laporan ini menampilkan grafik amalan dari 30 hari ke belakang
+              berdasarkan kalender Hijriah. Kamu bisa melihat detail amalan
+              harian dengan memilih tanggal tertentu.
             </Text>
           </ModalBody>
           <ModalFooter>
