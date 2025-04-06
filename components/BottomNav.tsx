@@ -12,13 +12,13 @@ const bottomNavItems = {
     { label: "Profile", icon: <User size={20} />, path: "/tholib/profile" },
   ],
   murabbi: [
-    { label: "Dashboard", icon: <Home size={20} />, path: "/murabbi" },
+    { label: "Home", icon: <Home size={20} />, path: "/murabbi" },
     { label: "Laporan", icon: <BarChart size={20} />, path: "/murabbi/laporan-tholib" },
     { label: "Halaqah", icon: <List size={20} />, path: "/murabbi/halaqah" },
     { label: "Profile", icon: <User size={20} />, path: "/murabbi/profile" },
   ],
   pengawas: [
-    { label: "Dashboard", icon: <Home size={20} />, path: "/pengawas" }, // Sama dengan Murabbi
+    { label: "Home", icon: <Home size={20} />, path: "/pengawas" }, // Sama dengan Murabbi
     { label: "Amalan", icon: <BookOpen size={20} />, path: "/pengawas/amalan" }, // Sama dengan Tholib
     { label: "Laporan", icon: <BarChart size={20} />, path: "/pengawas/laporan-tholib" }, // Sama dengan Murabbi
     { label: "Profile", icon: <User size={20} />, path: "/pengawas/profile" }, // Sama dengan Murabbi

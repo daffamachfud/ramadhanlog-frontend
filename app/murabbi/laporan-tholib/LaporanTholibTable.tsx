@@ -1,17 +1,22 @@
-import { Box, Table, Tbody, Tr, Td, Button, VStack, Text, Center } from "@chakra-ui/react";
-import { useState } from "react";
+import {
+  Box,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  VStack,
+  Text,
+} from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import LaporanTholibDetail from "./LaporanTholibDetail";
 import { LaporanTholib } from "./types";
+import AmalanChartMurabbi from "@/components/AmalanChartMurabbi";
 
-export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib[] }) {
-  const [selectedTholib, setSelectedTholib] = useState<LaporanTholib | null>(null);
+export default function LaporanTholibTable({
+  laporan,
+}: {
+  laporan: LaporanTholib[];
+}) {
   const router = useRouter();
-
-  const goToDetail = (id: number, name: string) => {
-    const encodedName = encodeURIComponent(name);
-    router.push(`/murabbi/laporan-tholib/${id.toString()}?name=${encodedName}`);
-  };
 
   return (
     <Box overflowX="auto" w="full">
@@ -20,33 +25,45 @@ export default function LaporanTholibTable({ laporan }: { laporan: LaporanTholib
           {laporan.map((tholib) => (
             <Tr key={tholib.id}>
               <Td>
-                <VStack align="start" spacing={0}>
-                  <Text fontWeight="bold" fontSize="md">{tholib.name}</Text>
-                  <Text fontSize="xs" color="gray.500">{tholib.halaqah}</Text>
-                </VStack>
-              </Td>
-              <Td>
-                <Center>
-                  <Button 
-                    size="sm" 
-                    colorScheme="blue"
-                    onClick={() => goToDetail(tholib.id, tholib.name)}
+                <VStack align="start" spacing={3} w="full">
+                  {/* Nama dan Halaqah */}
+                  <Box>
+                    <Text fontWeight="bold" fontSize="md">
+                      {tholib.name}
+                    </Text>
+                    <Text fontSize="xs" color="gray.500">
+                      {tholib.halaqah}
+                    </Text>
+                  </Box>
+
+                  {/* Chart Amalan */}
+                  <Box w="full">
+                    <AmalanChartMurabbi data={tholib.line_chart} />
+                  </Box>
+
+                  {/* Tombol Detail (opsional) */}
+                  {/* 
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    colorScheme="gray"
+                    onClick={() =>
+                      router.push(
+                        `/murabbi/laporan-tholib/${tholib.id}?name=${encodeURIComponent(
+                          tholib.name
+                        )}`
+                      )
+                    }
                   >
-                    Lihat Detail
+                    Lihat Detail Lengkap
                   </Button>
-                </Center>
+                  */}
+                </VStack>
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
-
-      {selectedTholib && (
-        <LaporanTholibDetail
-          params={{ tholibId: String(selectedTholib.id) }}
-          onClose={() => setSelectedTholib(null)}
-        />
-      )}
     </Box>
   );
 }
