@@ -105,9 +105,6 @@ export default function CatatAmalanPage() {
   
         const hijriRange = generateHijriRange(day, month, year, 11); // 26 Ramadhan s/d 5 Syawal
         setHijriDates(hijriRange);
-  
-        // Set default langsung ke 5 Syawal 1446
-        setSelectedHijriDate("5 Syawal 1446");
       } catch (err) {
         console.error("Gagal fetch hijri range:", err);
         setError("Gagal mengambil rentang tanggal Hijriah.");
@@ -139,11 +136,14 @@ export default function CatatAmalanPage() {
           }
         );
 
+
         const data = await response.json();
+        console.log("data nya nih bos :",data)
         if (!data.success) throw new Error(data.message);
 
         const parentIds = new Set(data.data.map((item: any) => item.parentId).filter(Boolean));
 
+        setSelectedHijriDate(data.hijriDate)
         setAmalan(
           data.data.map((item: any) => ({
             id: item.id,
