@@ -28,10 +28,10 @@ export default function Home() {
         {/* Judul & Deskripsi */}
         <VStack spacing={4} mb={6}>
           <Heading as="h1" size="xl">
-            Selamat Datang di Catatan Amalan Yaumiyah Ramadhan 1446 H
+            Haizum App
           </Heading>
           <Text fontSize="lg" color="gray.600">
-            Catat amalan harianmu selama Ramadhan dengan mudah dan rapi.
+            Aplikasi amalan harian dan lainnya.
           </Text>
         </VStack>
 
