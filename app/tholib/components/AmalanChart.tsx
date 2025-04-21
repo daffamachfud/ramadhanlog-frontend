@@ -11,8 +11,7 @@ type AmalanChartProps = {
 // 🔹 Fungsi untuk menentukan warna berdasarkan jumlah amalan
 const getColor = (value: number) => {
   if (value === 0) return "#ebedf0"; // Abu-abu (tidak ada laporan)
-  if (value >= 1 && value <= 9) return "#dff2b2"; // Hijau muda
-  if (value >= 10 && value <= 15) return "#7bc96f"; // Hijau sedang
+  if (value >= 1 && value <= 9) return "#196127"; // Hijau muda
   return "#0a4f20"; // Lebih dari 20 amalan
 };
 
@@ -57,40 +56,10 @@ const AmalanChart: React.FC<AmalanChartProps> = ({ data }) => {
         color="gray.600"
       >
         <Box display="flex" alignItems="center">
-          <Box w="10px" h="10px" bg="#ebedf0" borderRadius="3px" mr={2} />
-          <Text as="span" fontWeight="bold">
-            0
-          </Text>{" "}
-          <Text as="span" ml={1}>
-            Amalan
-          </Text>
-        </Box>
-        <Box display="flex" alignItems="center">
-          <Box w="10px" h="10px" bg="#dff2b2" borderRadius="3px" mr={2} />
-          <Text as="span" fontWeight="bold">
-            1 - 9
-          </Text>{" "}
-          <Text as="span" ml={1}>
-            Amalan
-          </Text>
-        </Box>
-        <Box display="flex" alignItems="center">
-          <Box w="10px" h="10px" bg="#7bc96f" borderRadius="3px" mr={2} />
-          <Text as="span" fontWeight="bold">
-            10 - 15
-          </Text>{" "}
-          <Text as="span" ml={1}>
-            Amalan
-          </Text>
-        </Box>
-        <Box display="flex" alignItems="center">
           <Box w="10px" h="10px" bg="#196127" borderRadius="3px" mr={2} />
           <Text as="span" fontWeight="bold">
-            &gt; 15
+            Puasa Syawal
           </Text>{" "}
-          <Text as="span" ml={1}>
-            Amalan
-          </Text>
         </Box>
       </Box>
     </Box>

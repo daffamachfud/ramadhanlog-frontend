@@ -22,8 +22,9 @@ import {
 const TholibDashboard = () => {
   // State untuk ringkasan amalan harian dan mingguan
   const [dailyData, setDailyData] = useState({
-    totalAmalan: 20,
+    totalAmalan: 0,
     completedAmalan: 0,
+    hijriDate: ""
   });
   const [loading, setLoading] = useState(true);
   // Data untuk chart mingguan
@@ -84,11 +85,13 @@ const TholibDashboard = () => {
 
         console.log("Data dari API:", data);
         console.log("dataPerminggu:", line_chart);
+        console.log("ringkasa harian:", ringkasanHarian);
 
         // Update state dengan data dari backend
         setDailyData({
-          totalAmalan: 20,
+          totalAmalan: ringkasanHarian.total,
           completedAmalan: ringkasanHarian.completed,
+          hijriDate : ringkasanHarian.date
         });
 
         setChartData(line_chart || []);
@@ -235,6 +238,7 @@ const TholibDashboard = () => {
           <DailySummary
             totalAmalan={dailyData.totalAmalan}
             completedAmalan={dailyData.completedAmalan}
+            hijriDate =  {dailyData.hijriDate}
           />
         </SimpleGrid>
       </VStack>

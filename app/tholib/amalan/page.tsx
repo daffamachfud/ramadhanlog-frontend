@@ -11,7 +11,6 @@ import { FaChartBar } from "react-icons/fa";
 import { ChevronRightIcon } from "@chakra-ui/icons";
 import AmalanChart from "../components/AmalanChart";
 import ReminderHadist from "../components/ReminderHadist";
-import DailySummary from "../components/DailySummary";
 
 const AmalanPage = () => {
   // State untuk ringkasan amalan harian dan mingguan
