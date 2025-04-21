@@ -2,17 +2,19 @@
 
 import { Box, Flex, IconButton, Text } from "@chakra-ui/react";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, User, BookOpen, List, BarChart } from "lucide-react";
+import { Home, User, BookOpen, Newspaper,List, BarChart } from "lucide-react";
 
 const bottomNavItems = {
   tholib: [
     { label: "Home", icon: <Home size={20} />, path: "/tholib" },
+    { label: "Feed", icon: <Newspaper size={20} />, path: "/post" },
     { label: "Amalan", icon: <BookOpen size={20} />, path: "/tholib/amalan" },
     { label: "Laporan", icon: <BarChart size={20} />, path: "/tholib/laporan-amalan" },
     { label: "Profile", icon: <User size={20} />, path: "/tholib/profile" },
   ],
   murabbi: [
     { label: "Home", icon: <Home size={20} />, path: "/murabbi" },
+    { label: "Feed", icon: <Newspaper size={20} />, path: "/post" },
     { label: "Amalan", icon: <BookOpen size={20} />, path: "/murabbi/amalan" },
     { label: "Laporan", icon: <BarChart size={20} />, path: "/murabbi/laporan-tholib" },
     { label: "Halaqah", icon: <List size={20} />, path: "/murabbi/halaqah" },
@@ -20,6 +22,7 @@ const bottomNavItems = {
   ],
   pengawas: [
     { label: "Home", icon: <Home size={20} />, path: "/pengawas" }, // Sama dengan Murabbi
+    { label: "Feed", icon: <Newspaper size={20} />, path: "/post" },
     { label: "Amalan", icon: <BookOpen size={20} />, path: "/pengawas/amalan" }, // Sama dengan Tholib
     { label: "Laporan", icon: <BarChart size={20} />, path: "/pengawas/laporan-tholib" }, // Sama dengan Murabbi
     { label: "Profile", icon: <User size={20} />, path: "/pengawas/profile" }, // Sama dengan Murabbi
@@ -29,11 +32,15 @@ const bottomNavItems = {
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const role = pathname.startsWith("/tholib")
-  ? "tholib"
-  : pathname.startsWith("/murabbi")
-  ? "murabbi"
-  : "pengawas";
+  
+  const role =
+  pathname === "/post"
+    ? "tholib"
+    : pathname.startsWith("/tholib")
+    ? "tholib"
+    : pathname.startsWith("/murabbi")
+    ? "murabbi"
+    : "pengawas";
 
   return (
     <Box

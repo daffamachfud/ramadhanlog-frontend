@@ -9,9 +9,6 @@ import {
   Badge,
   Text,
   Skeleton,
-  Tag,
-  Tooltip,
-  IconButton,
 } from "@chakra-ui/react";
 import { FiGlobe, FiPlus, FiCheckCircle } from "react-icons/fi";
 import withAuth from "@/app/utils/withAuth";
