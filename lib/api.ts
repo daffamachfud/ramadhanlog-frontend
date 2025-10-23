@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://haizumapp.com/api"; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5002/api"; 
 
 export const api = {
   register: `${API_URL}/auth/register`,
@@ -34,6 +34,7 @@ export const api = {
   getWrapped: `${API_URL}/wrapped/get`,
 
   getPosts: `${API_URL}/post/posts`,
+  getPostById: (id: string) => `${API_URL}/post/posts/${id}`,
   createPost: `${API_URL}/post/posts`,
   updatePost: (id: string) => `${API_URL}/post/posts/${id}`,
   deletePost: (id: string) => `${API_URL}/post/posts/${id}`,

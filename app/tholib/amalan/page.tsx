@@ -153,7 +153,7 @@ const AmalanPage = () => {
         <ReminderHadist amalanList={amalanList} />
 
         {/* Grafik Amalan Mingguan */}
-        <AmalanChart data={chartData} />
+        <AmalanChart data={chartData} hijriDate={prayerTimes.HijriDate} loading={loading} />
       </VStack>
     </Box>
   );
