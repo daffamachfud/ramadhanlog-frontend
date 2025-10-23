@@ -34,6 +34,7 @@ export const api = {
   getWrapped: `${API_URL}/wrapped/get`,
 
   getPosts: `${API_URL}/post/posts`,
+  getPostById: (id: string) => `${API_URL}/post/posts/${id}`,
   createPost: `${API_URL}/post/posts`,
   updatePost: (id: string) => `${API_URL}/post/posts/${id}`,
   deletePost: (id: string) => `${API_URL}/post/posts/${id}`,

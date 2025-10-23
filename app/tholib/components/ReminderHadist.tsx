@@ -40,33 +40,24 @@ const ReminderHadis: React.FC<ReminderHadisProps> = ({ amalanList }) => {
   const notCompletedAmalan = amalanList.filter((amalan) => !amalan.completed);
 
   const [currentHadisIndex, setCurrentHadisIndex] = useState(0);
-  
-  // Ambil hanya hadis untuk amalan yang belum dilakukan
+
+  // Ambil hadis untuk amalan yang belum dilakukan; jika semua selesai, tampilkan seluruh hadis tetap berputar
   const filteredHadisList = hadisList.filter((hadis) =>
     notCompletedAmalan.some((amalan) => amalan.name === hadis.name)
   );
+  const displayHadisList = filteredHadisList.length > 0 ? filteredHadisList : hadisList;
 
   useEffect(() => {
-    if (filteredHadisList.length === 0) return; // Pastikan ada hadis sebelum menjalankan efek
+    if (displayHadisList.length === 0) return; // Pastikan ada hadis sebelum menjalankan efek
 
     const interval = setInterval(() => {
-      setCurrentHadisIndex((prevIndex) => (prevIndex + 1) % filteredHadisList.length);
+      setCurrentHadisIndex((prevIndex) => (prevIndex + 1) % displayHadisList.length);
     }, 10000); // Ganti hadis setiap 10 detik
 
     return () => clearInterval(interval); // Membersihkan interval saat komponen unmount
-  }, [filteredHadisList.length]);
+  }, [displayHadisList.length]);
 
-  if (filteredHadisList.length === 0) {
-    return (
-      <Box p={4} bg="white" borderRadius="lg" boxShadow="md" textAlign="center">
-        <Text fontSize="md" fontWeight="bold">
-          Semua amalan telah dilakukan! 🎉
-        </Text>
-      </Box>
-    );
-  }
-
-  const currentHadis = filteredHadisList[currentHadisIndex];
+  const currentHadis = displayHadisList[currentHadisIndex];
 
   return (
     <Box p={4} bg="white" borderRadius="lg" boxShadow="md" textAlign="left">
@@ -75,9 +66,7 @@ const ReminderHadis: React.FC<ReminderHadisProps> = ({ amalanList }) => {
         <Text fontSize="md" fontWeight="bold">
           {currentHadis?.hadis}
         </Text>
-        <Text fontSize="sm" color="gray.500">
-          - Keutamaan {currentHadis?.name} -
-        </Text>
+        <Text fontSize="sm" color="gray.500">- Keutamaan {currentHadis?.name} -</Text>
       </VStack>
     </Box>
   );

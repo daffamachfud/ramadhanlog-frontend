@@ -67,16 +67,19 @@ export default function CatatAmalanPage() {
     "Ramadhan", "Syawal", "Zulqaidah", "Zulhijjah"
   ];
 
-  const generateHijriRange = (startDay: number, startMonth: string, startYear: number, total: number) => {
+  // Membuat rentang tanggal Hijriah dengan indeks bulan (0-11) agar aman dari variasi penamaan
+  const generateHijriRange = (startDay: number, startMonthIndex: number, startYear: number, total: number) => {
     const dates: string[] = [];
     let day = startDay;
-    let month = hijriMonths.indexOf(startMonth);
+    let month = startMonthIndex; // 0-11
     let year = startYear;
-  
+
     for (let i = 0; i < total; i++) {
-      dates.push(`${day} ${hijriMonths[month]} ${year}`);
+      const monthName = hijriMonths[month] ?? "";
+      dates.push(`${day} ${monthName} ${year}`);
       day++;
-  
+
+      // Catatan: Hijriah 29/30 hari. Untuk kesederhanaan, asumsi 30 hari.
       if (day > 30) {
         day = 1;
         month++;
@@ -86,8 +89,8 @@ export default function CatatAmalanPage() {
         }
       }
     }
-  
-    return dates.map(d => ({ hijri: d }));
+
+    return dates.map((d) => ({ hijri: d }));
   };
 
   useEffect(() => {
@@ -96,26 +99,36 @@ export default function CatatAmalanPage() {
         const response = await fetch("https://api.myquran.com/v2/cal/hijr/?adj=-10");
         const result = await response.json();
         if (!result.status) throw new Error("Gagal ambil tanggal dari API");
-  
-        const [, hijriText] = result.data.date; // "26 Ramadhan 1446 H"
-        const [dayStr, monthStr, yearStr] = hijriText.replace(" H", "").split(" ");
-        const day = parseInt(dayStr);
-        const month = monthStr;
-        const year = parseInt(yearStr);
-  
-        const hijriRange = generateHijriRange(day, month, year, 11); // 26 Ramadhan s/d 5 Syawal
+
+        // Gunakan data numerik agar robust terhadap nama bulan yang terdiri dari 2 kata
+        // Contoh: num = [5,23,10,2025,21,4,1447] => H: day=21, month=4 (1-based), year=1447
+        const { num } = result.data;
+        const hDay = Number(num?.[4]);
+        const hMonth1Based = Number(num?.[5]);
+        const hYear = Number(num?.[6]);
+
+        if (!hDay || !hMonth1Based || !hYear) {
+          throw new Error("Format tanggal Hijriah tidak valid dari API");
+        }
+
+        const monthName = hijriMonths[hMonth1Based - 1] ?? "";
+        const todayHijriText = `${hDay} ${monthName} ${hYear}`;
+
+        const hijriRange = generateHijriRange(hDay, hMonth1Based - 1, hYear, 11); // 11 hari rentang
         setHijriDates(hijriRange);
+        setSelectedHijriDate(todayHijriText);
       } catch (err) {
         console.error("Gagal fetch hijri range:", err);
         setError("Gagal mengambil rentang tanggal Hijriah.");
       }
     };
-  
+
     fetchInitialHijriRange();
   }, []);
 
   useEffect(() => {
     const fetchAmalan = async () => {
+      if (!selectedHijriDate) return;
       try {
         const cookies = parseCookies();
         const token = cookies.token;
@@ -142,8 +155,6 @@ export default function CatatAmalanPage() {
         if (!data.success) throw new Error(data.message);
 
         const parentIds = new Set(data.data.map((item: any) => item.parentId).filter(Boolean));
-
-        setSelectedHijriDate(data.hijriDate)
         setAmalan(
           data.data.map((item: any) => ({
             id: item.id,

@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
-import { Box, Text, Tooltip, VStack, HStack } from "@chakra-ui/react";
+import { Box, Text, Tooltip, VStack, Skeleton, SkeletonText } from "@chakra-ui/react";
 
 // 🔹 Tipe data untuk props
 type AmalanChartProps = {
   data: { name: string; value: number }[];
+  hijriDate?: string; // e.g., "21 Rabiul Akhir 1447 H"
+  loading?: boolean; // optional external loading flag
 };
 
 // 🔹 Fungsi untuk menentukan warna berdasarkan jumlah amalan
@@ -15,12 +17,40 @@ const getColor = (value: number) => {
   return "#0a4f20"; // Lebih dari 20 amalan
 };
 
-const AmalanChart: React.FC<AmalanChartProps> = ({ data }) => {
-  console.log("Hasil amalan chart : ",data)
+const extractMonthYear = (hijriDate?: string): string | null => {
+  if (!hijriDate) return null;
+  // Remove trailing 'H' and trim
+  const cleaned = hijriDate.replace(/\s*H$/i, '').trim();
+  const parts = cleaned.split(/\s+/);
+  // Expect: [day, ...monthParts, year]
+  if (parts.length < 3) return cleaned; // fallback raw if unexpected
+  const year = parts[parts.length - 1];
+  const month = parts.slice(1, -1).join(' ');
+  return `${month} ${year} H`;
+};
+
+const AmalanChart: React.FC<AmalanChartProps> = ({ data, hijriDate, loading }) => {
+  const monthYear = extractMonthYear(hijriDate || '');
+  const isLoading = loading ?? (!data || data.length === 0);
+  console.log("Hasil amalan chart : ", data);
+  
+  if (isLoading) {
+    return (
+      <Box p={3} bg="white" borderRadius="lg" boxShadow="md" fontWeight="bold">
+        <SkeletonText noOfLines={1} skeletonHeight={3} w="50%" mb={2} />
+        <Box display="flex" flexWrap="wrap" gap="4px" alignItems="center">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <Skeleton key={i} height="14px" width="14px" borderRadius="2px" />
+          ))}
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box p={3} bg="white" borderRadius="lg" boxShadow="md" fontWeight="bold">
       <Text fontSize="sm" mb={2}>
-        Amalan Bulan : Syawal 1446 H
+        Amalan Bulan : {monthYear || '-'}
       </Text>
 
       {/* 🔹 Grid dengan Label Tanggal */}
@@ -47,21 +77,7 @@ const AmalanChart: React.FC<AmalanChartProps> = ({ data }) => {
       </Box>
 
       {/* 🔹 Keterangan Warna */}
-      <Box
-        display="flex"
-        flexDirection="column"
-        gap={1}
-        mt={2}
-        fontSize="10px"
-        color="gray.600"
-      >
-        <Box display="flex" alignItems="center">
-          <Box w="10px" h="10px" bg="#196127" borderRadius="3px" mr={2} />
-          <Text as="span" fontWeight="bold">
-            Puasa Syawal
-          </Text>{" "}
-        </Box>
-      </Box>
+      {/* Keterangan Warna (opsional, dapat dibuat dinamis jika dibutuhkan) */}
     </Box>
   );
 };
