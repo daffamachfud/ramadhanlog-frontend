@@ -1,282 +1,84 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, VStack, SimpleGrid, Flex, Icon, Text, Skeleton, SkeletonText } from "@chakra-ui/react";
-import DailySummary from "./components/DailySummary";
-import AmalanChart from "./components/AmalanChart";
-import ReminderHadist from "./components/ReminderHadist";
+import { Box, VStack } from "@chakra-ui/react";
 import withAuth from "@/app/utils/withAuth";
+import HeroNextPrayer from "@/components/Home/HeroNextPrayer";
+import PrayerChips from "@/components/Home/PrayerChips";
+import SmartCTA from "@/components/Home/SmartCTA";
+import DailyProgressCard from "@/components/Home/DailyProgressCard";
+import QuickLinks from "@/components/Home/QuickLinks";
+import { PrayerKey, PrayerTime, findUpcoming, useEtaLabel } from "@/utils/time";
 import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
-import moment from "moment-hijri";
-import PrayerTimesHeader from "./components/PrayerTimesHeader";
-import { useRouter } from "next/navigation";
-import {
-  FaChartBar,
-  FaPen,
-  FaQuran,
-  FaBookOpen,
-  FaHands,
-} from "react-icons/fa";
 
 const TholibDashboard = () => {
-  // State untuk ringkasan amalan harian dan mingguan
-  const [dailyData, setDailyData] = useState({
-    totalAmalan: 0,
-    completedAmalan: 0,
-    hijriDate: ""
+  const [prayerTimes, setPrayerTimes] = useState({
+    Subuh: '-', Terbit: '-', Dzuhur: '-', Ashar: '-', Maghrib: '-', Isya: '-', HijriDate: '-'
   });
-  const [loading, setLoading] = useState(true);
-  // Data untuk chart mingguan
-  const [chartData, setChartData] = useState<{ name: string; value: number }[]>(
-    []
-  );
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
 
-  // Daftar amalan harian
-  const [amalanList, setAmalanList] = useState<
-    { name: string; completed: boolean }[]
-  >([]);
-
-  const router = useRouter();
-
-  const [prayerTimes, setPrayerTimes] = useState<{
-    Subuh: string;
-    Terbit: string;
-    Dzuhur: string;
-    Ashar: string;
-    Maghrib: string;
-    Isya: string;
-    HijriDate: string;
-  }>({
-    Subuh: "-",
-    Terbit: "-",
-    Dzuhur: "-",
-    Ashar: "-",
-    Maghrib: "-",
-    Isya: "-",
-    HijriDate: "-",
-  });
-
-  // Simulasi pengambilan data dari API
   useEffect(() => {
-    async function fetchDashboardData() {
+    const load = async () => {
       try {
-        const cookies = parseCookies();
-        const token = cookies.token;
-        if (!token) {
-          window.location.href = "https://haizumapp.com";
-          return;
-        }
-
-        const response = await fetch(api.dashboardTholib, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
+        const { token } = parseCookies();
+        if (!token) return;
+        const res = await fetch(api.dashboardTholib, {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include'
         });
-
-        if (!response.ok) {
-          throw new Error("Gagal mengambil data dashboard");
+        const data = await res.json();
+        const pt = data?.prayerTimes || data?.data?.prayerTimes;
+        if (pt) setPrayerTimes(pt);
+        const rh = data?.ringkasanHarian || data?.data?.ringkasanHarian;
+        const sa = data?.statusAmalan || data?.data?.statusAmalan;
+        if (rh && typeof rh.completed === 'number' && typeof rh.total === 'number') {
+          setProgress({ done: rh.completed, total: rh.total });
+        } else if (sa) {
+          const c = Array.isArray(sa.completed) ? sa.completed.length : 0;
+          const n = Array.isArray(sa.notCompleted) ? sa.notCompleted.length : 0;
+          setProgress({ done: c, total: c + n });
         }
-
-        const data = await response.json();
-        const { ringkasanHarian, line_chart, statusAmalan } = data;
-
-        console.log("Data dari API:", data);
-        console.log("dataPerminggu:", line_chart);
-        console.log("ringkasa harian:", ringkasanHarian);
-
-        // Update state dengan data dari backend
-        setDailyData({
-          totalAmalan: ringkasanHarian.total,
-          completedAmalan: ringkasanHarian.completed,
-          hijriDate : ringkasanHarian.date
-        });
-
-        setChartData(line_chart || []);
-
-        setAmalanList([
-          ...(statusAmalan?.completed?.map((item: string) => ({
-            name: item,
-            completed: true,
-          })) || []),
-          ...(statusAmalan?.notCompleted?.map((item: string) => ({
-            name: item,
-            completed: false,
-          })) || []),
-        ]);
-
-        if (data.prayerTimes) {
-          setPrayerTimes(data.prayerTimes);
-        }
-      } catch (error) {
-        console.error("Gagal memuat data dashboard:", error);
-      } finally {
-        setLoading(false);
+      } catch (e) {
+        console.error('Gagal memuat prayerTimes tholib:', e);
       }
-    }
-
-    fetchDashboardData();
+    };
+    load();
   }, []);
 
-  moment.locale("en");
+  const toHHMM = (t: string): `${number}${number}:${number}${number}` => {
+    const s = t && t.includes(':') ? t : '00:00';
+    return s as `${number}${number}:${number}${number}`;
+  };
+  const prayers: PrayerTime[] = [
+    { key: 'subuh', label: 'Subuh', time: toHHMM(prayerTimes.Subuh) },
+    { key: 'terbit', label: 'Terbit', time: toHHMM(prayerTimes.Terbit) },
+    { key: 'dzuhur', label: 'Dzuhur', time: toHHMM(prayerTimes.Dzuhur) },
+    { key: 'ashar', label: 'Ashar', time: toHHMM(prayerTimes.Ashar) },
+    { key: 'maghrib', label: 'Maghrib', time: toHHMM(prayerTimes.Maghrib) },
+    { key: 'isya', label: 'Isya', time: toHHMM(prayerTimes.Isya) },
+  ];
+  const upcomingKey: PrayerKey = (findUpcoming(prayers) as PrayerKey) || 'dzuhur';
+  const nextItem = prayers.find(p => p.key === upcomingKey) || prayers[2];
+  const etaLabel = useEtaLabel(nextItem.time, 30_000);
 
   return (
-    <Box>
-      <PrayerTimesHeader prayerTimes={prayerTimes} />
+    <Box bg="gray.50" minH="100vh">
+      <HeroNextPrayer
+        city="Bandung"
+        gregDate={new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()) + ' -'}
+        hijriDate={prayerTimes.HijriDate}
+        prayerLabel={nextItem.label}
+        time={nextItem.time}
+        etaLabel={etaLabel || 'Sudah Masuk Waktu'}
+      >
+        <PrayerChips items={prayers} upcomingKey={upcomingKey} fullWidth showTime onHero />
+      </HeroNextPrayer>
 
-      <VStack spacing={6} align="stretch">
-        {/* Ringkasan Amalan Mingguan dan Harian */}
-
-        {/* Tambahan grid tombol menu */}
-        <SimpleGrid columns={4} spacing={4} mt={4} px={4}>
-          {loading
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <Box
-                  key={index}
-                  bg="white"
-                  p={2}
-                  borderRadius="md"
-                  boxShadow="sm"
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Skeleton height="20px" width="20px" borderRadius="full" />
-                  <Skeleton mt={1} height="10px" width="70%" />
-                </Box>
-              ))
-            : [
-                {
-                  title: "Catat Amalan",
-                  icon: FaPen,
-                  link: "/tholib/catat-amalan",
-                },
-                {
-                  title: "Al-Qur'an",
-                  icon: FaQuran,
-                  link: "/quran",
-                  isComingSoon: true,
-                },
-                {
-                  title: "Hadist",
-                  icon: FaBookOpen,
-                  link: "/hadist",
-                  isComingSoon: true,
-                },
-                { title: "Doa", icon: FaHands, link: "/doa", isComingSoon: true },
-                {
-                  title: "Rapot Ramadhan",
-                  icon: FaChartBar,
-                  link: "/wrapped",
-                  isNew: true,
-                },
-              ].map((item, index) => (
-                <Box
-                  key={index}
-                  as="button"
-                  onClick={() => {
-                    if (item.isComingSoon) {
-                      alert(
-                        "Fitur ini sedang dalam proses pengembangan. InsyaAllah segera hadir untuk menemani ibadahmu. Mohon doanya ya 🙏"
-                      );
-                    } else {
-                      router.push(item.link);
-                    }
-                  }}
-                  bg="white"
-                  p={2}
-                  borderRadius="md"
-                  boxShadow="sm"
-                  _hover={{ bg: "gray.100", boxShadow: "md" }}
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
-                  justifyContent="center"
-                  position="relative"
-                >
-                  <Icon as={item.icon} boxSize={5} color="blue.500" />
-                  <Text
-                    mt={1}
-                    fontSize="x-small"
-                    fontWeight="medium"
-                    color="gray.700"
-                  >
-                    {item.title}
-                  </Text>
-
-                  {/* Badge "Baru" */}
-                  {item.isNew && (
-                    <Box
-                      position="absolute"
-                      top="0"
-                      right="0"
-                      bg="red.500"
-                      color="white"
-                      fontSize="xx-small"
-                      fontWeight="bold"
-                      px={2}
-                      py={0.5}
-                      borderRadius="full"
-                      transform="translate(30%, -30%)"
-                      boxShadow="md"
-                    >
-                      Baru
-                    </Box>
-                  )}
-
-                  {/* Badge "Coming Soon" */}
-                  {item.isComingSoon && (
-                    <Box
-                      position="absolute"
-                      top="0"
-                      right="0"
-                      bg="yellow.400"
-                      color="black"
-                      fontSize="6px"
-                      fontWeight="bold"
-                      px={1.5}
-                      py={0.5}
-                      borderRadius="full"
-                      transform="translate(30%, -30%)"
-                      boxShadow="md"
-                    >
-                      Coming Soon
-                    </Box>
-                  )}
-                </Box>
-              ))}
-        </SimpleGrid>
-
-        {/* Komponen lainnya bisa ditambahkan di sini */}
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-          {loading ? (
-            <Box p={5} borderRadius="lg" boxShadow="md" bg="white">
-              <SkeletonText noOfLines={1} skeletonHeight={4} w="40%" />
-              <Flex justify="space-between" mt={4}>
-                <VStack align="start" spacing={4} w="50%">
-                  <Box>
-                    <Skeleton height="20px" width="60px" mb={2} />
-                    <Skeleton height="14px" width="140px" />
-                  </Box>
-                  <Box>
-                    <Skeleton height="20px" width="60px" mb={2} />
-                    <Skeleton height="14px" width="120px" />
-                  </Box>
-                </VStack>
-                <Skeleton height="90px" width="90px" borderRadius="full" />
-              </Flex>
-            </Box>
-          ) : (
-            <DailySummary
-              totalAmalan={dailyData.totalAmalan}
-              completedAmalan={dailyData.completedAmalan}
-              hijriDate={dailyData.hijriDate}
-            />
-          )}
-        </SimpleGrid>
+      <VStack spacing={3} align="stretch" mt={2}>
+        <SmartCTA progress={progress} />
+        <QuickLinks />
+        <DailyProgressCard progress={progress} />
       </VStack>
     </Box>
   );
