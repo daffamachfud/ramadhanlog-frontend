@@ -25,9 +25,12 @@ import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
 import moment from "moment-hijri";
 import { useRouter } from "next/navigation"; // Import Next.js router
-import PrayerTimesHeader from "../tholib/components/PrayerTimesHeader";
-import { ChevronRightIcon } from "@chakra-ui/icons";
-import { FaChartBar } from "react-icons/fa";
+import HeroNextPrayer from "@/components/Home/HeroNextPrayer";
+import PrayerChips from "@/components/Home/PrayerChips";
+import QuickLinks from "@/components/Home/QuickLinks";
+import MurabbiReportCards from "@/components/Home/MurabbiReportCards";
+import SmartCTA from "@/components/Home/SmartCTA";
+import { PrayerKey, PrayerTime, diffNowMinutes, formatEtaLabel, findUpcoming } from "@/utils/time";
 
 moment.locale("en");
 
@@ -143,97 +146,69 @@ const DashboardMurabbi = () => {
     );
   }
 
+  // Map prayerTimes into PrayerTime[] safely
+  const toHHMM = (t: string): `${number}${number}:${number}${number}` => {
+    const s = t && t.includes(":") ? t : "00:00";
+    return s as `${number}${number}:${number}${number}`;
+  };
+  const prayers: PrayerTime[] = [
+    { key: 'subuh', label: 'Subuh', time: toHHMM(prayerTimes.Subuh) },
+    { key: 'terbit', label: 'Terbit', time: toHHMM(prayerTimes.Terbit) },
+    { key: 'dzuhur', label: 'Dzuhur', time: toHHMM(prayerTimes.Dzuhur) },
+    { key: 'ashar', label: 'Ashar', time: toHHMM(prayerTimes.Ashar) },
+    { key: 'maghrib', label: 'Maghrib', time: toHHMM(prayerTimes.Maghrib) },
+    { key: 'isya', label: 'Isya', time: toHHMM(prayerTimes.Isya) },
+  ];
+  const upKey: PrayerKey = (findUpcoming(prayers) as PrayerKey) || 'dzuhur';
+  const nextItem = prayers.find((p) => p.key === upKey) || prayers[2];
+  const etaMin = diffNowMinutes(nextItem.time);
+  const etaLabel = formatEtaLabel(Number.isNaN(etaMin) ? 0 : etaMin);
+  const gregDate = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()) + ' -';
+
   return (
     <Box>
-      {/* <Heading mb={4}>Dashboard Murabbi</Heading> */}
-      <PrayerTimesHeader prayerTimes={prayerTimes} />
+      <HeroNextPrayer
+        city="Bandung"
+        gregDate={gregDate}
+        hijriDate={prayerTimes.HijriDate}
+        prayerLabel={nextItem.label}
+        time={nextItem.time}
+        etaLabel={etaLabel || "Sudah Masuk Waktu"}
+      >
+        <PrayerChips
+          items={prayers}
+          upcomingKey={upKey}
+          fullWidth
+          showTime
+          onHero
+        />
+      </HeroNextPrayer>
 
-      <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          p={4}
-          borderRadius="lg"
-          boxShadow="sm"
-          bg="white"
-          mb={4} 
-          cursor="pointer"
-          onClick={() => router.push("/wrapped")}
-          _hover={{ boxShadow: "md", bg: "gray.100" }}
-        >
-          <Flex align="center">
-            <Icon as={FaChartBar} boxSize={6} color="blue.500" mr={3} />{" "}
-            {/* Icon Laporan */}
-            <Text fontSize="sm" fontWeight="medium" color="gray.700">
-              Lihat Raport Ramadhan
-            </Text>
-          </Flex>
-          <ChevronRightIcon boxSize={6} color="gray.500" />
-        </Box>
+      <Box mt={2}>
+        <QuickLinks />
+      </Box>
 
-      {/* Ringkasan Laporan */}
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} p = {6}>
-        <Card
-          bg="green.100"
-          cursor="pointer"
-          onClick={() => router.push("/pengawas/sudah-laporan")} // Navigasi ke halaman baru
-        >
-          <CardBody
-            display="flex"
-            flexDirection="column"
-            justifyContent="space-between"
-          >
-            <Stat>
-              <StatLabel>Total Sudah Laporan</StatLabel>
-              <StatNumber>{dashboardData.reportedAnggota}</StatNumber>
-              <StatHelpText>
-                <StatArrow type="increase" />
-                {(
-                  (dashboardData.reportedAnggota / dashboardData.totalAnggota) *
-                  100
-                ).toFixed(1)}
-                %
-              </StatHelpText>
-            </Stat>
-            <Text fontSize="sm" textAlign="right" cursor="pointer">
-              Lihat Detail
-            </Text>
-          </CardBody>
-        </Card>
+       {/* CTA untuk mencatat amalan pengawas */}
+      <VStack spacing={3} align="stretch" mt={2}>
+        <SmartCTA href="/pengawas/catat-amalan" labelBase="Catat Amalan" />
+      </VStack>
 
-        {/* <Card bg="purple.100">
-          <CardBody>
-            <Stat>
-              <StatLabel>Rata-rata Tilawah</StatLabel>
-              <StatNumber>{formatTilawah(dashboardData.avgTilawah)}</StatNumber>
-            </Stat>
-          </CardBody>
-        </Card> */}
+      {/* Ringkasan Laporan modern */}
+      <Box mt={3}>
+        <MurabbiReportCards
+          reported={dashboardData.reportedAnggota}
+          total={dashboardData.totalAnggota}
+          onClickReported={() => router.push("/pengawas/sudah-laporan")}
+          onClickUnreported={() => router.push("/pengawas/belum-laporan")}
+        />
+      </Box>
 
-        <Card
-          bg="red.100"
-          cursor="pointer"
-          onClick={() => router.push("/pengawas/belum-laporan")} // Navigasi ke halaman baru
-        >
-          <CardBody>
-            <Stat>
-              <StatLabel>Total Belum Laporan</StatLabel>
-              <StatNumber>
-                {dashboardData.totalAnggota - dashboardData.reportedAnggota}
-              </StatNumber>
-            </Stat>
-            <Text fontSize="sm" textAlign="right" cursor="pointer">
-              Lihat Detail
-            </Text>
-          </CardBody>
-        </Card>
-      </SimpleGrid>
 
-      {/* Highlight Laporan Per Tholib */}
-      <Heading size="sm" mt={6} mb={4} p = {4}>
+      {/* Highlight Laporan Hari Ini
+      <Heading size="sm" mt={6} mb={3} p={2}>
         Highlight Laporan Hari Ini
       </Heading>
-      <VStack align="stretch" spacing={4}>
+      <VStack align="stretch" spacing={3} px={4}>
         {dashboardData.anggotaReports.length > 0 ? (
           dashboardData.anggotaReports.map((tholib) => (
             <Box
@@ -241,9 +216,9 @@ const DashboardMurabbi = () => {
               p={4}
               borderWidth="1px"
               borderRadius="md"
-              boxShadow="md"
+              boxShadow="sm"
               cursor="pointer"
-              _hover={{ bg: "gray.100" }} // Efek hover agar terlihat interaktif
+              _hover={{ bg: "gray.50" }}
               onClick={() => goToDetail(tholib.id, tholib.user_name)}
             >
               <HStack justifyContent="space-between">
@@ -259,8 +234,8 @@ const DashboardMurabbi = () => {
             Belum ada yang laporan hari ini.
           </Text>
         )}
-      </VStack>
+      </VStack> */}
     </Box>
   );
 };
-export default withAuth(DashboardMurabbi, ["murabbi"]);
+export default withAuth(DashboardMurabbi, ["pengawas"]);

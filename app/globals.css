@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Utilities for landing accents */
+@layer utilities {
+  .hero-gradient {
+    @apply bg-hero text-white;
+  }
+  .shadow-soft {
+    box-shadow: 0 6px 24px rgba(2, 8, 23, 0.06);
+  }
+  .shadow-card {
+    box-shadow: 0 10px 30px rgba(2, 8, 23, 0.08);
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
