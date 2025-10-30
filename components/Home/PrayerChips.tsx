@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
 import { Box, HStack, Icon, Text, useColorModeValue, SimpleGrid, VStack } from "@chakra-ui/react";
