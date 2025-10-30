@@ -3,21 +3,39 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { setCookie } from "nookies";
-import { Box, Button, FormControl, FormLabel, Input, VStack, Heading, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  InputGroup,
+  InputRightElement,
+  IconButton,
+  VStack,
+  Heading,
+  Text,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleLogin = async () => {
     setError("");
+    setIsLoading(true);
 
     if (!email || !password) {
       setError("Email dan password harus diisi!");
+      setIsLoading(false);
       return;
     }
 
@@ -60,42 +78,98 @@ export default function LoginPage() {
       } else {
         setError("Terjadi kesalahan, coba lagi.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Box minH="100vh" display="flex" justifyContent="center" alignItems="center" bg="gray.100">
-      <Box w={{ base: "90%", md: "400px" }} p="6" boxShadow="lg" borderRadius="md" bg="white">
-        <Heading size="lg" mb="4" textAlign="center">Login Haizum App</Heading>
-        <VStack spacing="4">
-          {error && <Text color="red.500">{error}</Text>}
+    <Box
+      minH="100vh"
+      bgGradient="linear(to-b, gray.50, white)"
+      position="relative"
+      overflow="hidden"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      px={6}
+    >
+      {/* Background accents */}
+      <Box position="absolute" top="-24" right="-24" w="72" h="72" bgGradient="radial(blue.100, transparent 60%)" filter="blur(18px)" />
+      <Box position="absolute" bottom="-24" left="-24" w="72" h="72" bgGradient="radial(teal.100, transparent 60%)" filter="blur(18px)" />
+
+      <Box
+        w={{ base: "100%", md: "420px" }}
+        p={{ base: 6, md: 8 }}
+        bg={useColorModeValue("white", "gray.800")}
+        borderWidth="1px"
+        borderColor={useColorModeValue("gray.200", "gray.700")}
+        borderRadius="xl"
+        boxShadow="md"
+      >
+        <VStack spacing={1} mb={6} textAlign="center">
+          <Heading size="lg">Masuk ke Haizum</Heading>
+          <Text color={useColorModeValue("gray.600", "gray.300")}>Lanjutkan catatan amalan harianmu</Text>
+        </VStack>
+
+        <VStack spacing={4} align="stretch">
+          {error && (
+            <Box bg="red.50" borderWidth="1px" borderColor="red.200" color="red.600" p={3} borderRadius="md">
+              {error}
+            </Box>
+          )}
+
           <FormControl isRequired>
             <FormLabel>Email</FormLabel>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Masukkan email"
+              placeholder="nama@domain.com"
             />
           </FormControl>
+
           <FormControl isRequired>
             <FormLabel>Password</FormLabel>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Masukkan password"
-            />
+            <InputGroup>
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleLogin();
+                }}
+              />
+              <InputRightElement>
+                <IconButton
+                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  variant="ghost"
+                  size="sm"
+                  icon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  onClick={() => setShowPassword((s) => !s)}
+                />
+              </InputRightElement>
+            </InputGroup>
           </FormControl>
-          <Button colorScheme="blue" w="full" onClick={handleLogin}>
-            Login
+
+          <Button colorScheme="blue" w="full" onClick={handleLogin} isLoading={isLoading}>
+            Masuk
           </Button>
-          <Text fontSize="sm">
-            Belum punya akun? <Link href="/auth/register" passHref><Text as="span" color="blue.500" cursor="pointer">Daftar</Text></Link>
-          </Text>
-          <Text fontSize="sm">
-            <Link href="/auth/reset-password" passHref><Text as="span" color="blue.500" cursor="pointer">Lupa password?</Text></Link>
-          </Text>
+
+          <VStack spacing={1} pt={2}>
+            <Text fontSize="sm" color={useColorModeValue("gray.600", "gray.300")}> 
+              Belum punya akun? {" "}
+              <Link href="/auth/register" passHref>
+                <Text as="span" color="blue.500" cursor="pointer">Daftar</Text>
+              </Link>
+            </Text>
+            <Text fontSize="sm">
+              <Link href="/auth/reset-password" passHref>
+                <Text as="span" color="blue.500" cursor="pointer">Lupa password?</Text>
+              </Link>
+            </Text>
+          </VStack>
         </VStack>
       </Box>
     </Box>
