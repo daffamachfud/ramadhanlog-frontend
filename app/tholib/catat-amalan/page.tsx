@@ -26,7 +26,11 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
+  Tooltip,
+  Skeleton,
+  SkeletonText,
+  Badge
 } from "@chakra-ui/react";
 import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
@@ -111,12 +115,12 @@ export default function CatatAmalanPage() {
           throw new Error("Format tanggal Hijriah tidak valid dari API");
         }
 
-        const monthName = hijriMonths[hMonth1Based - 1] ?? "";
-        const todayHijriText = `${hDay} ${monthName} ${hYear}`;
-
         const hijriRange = generateHijriRange(hDay, hMonth1Based - 1, hYear, 11); // 11 hari rentang
         setHijriDates(hijriRange);
-        setSelectedHijriDate(todayHijriText);
+        // Karena kita meminta data dengan adj=-10 (10 hari sebelum hari ini),
+        // maka indeks 10 pada rentang merupakan "hari ini".
+        const todayIndex = Math.min(10, hijriRange.length - 1);
+        setSelectedHijriDate(hijriRange[todayIndex].hijri);
       } catch (err) {
         console.error("Gagal fetch hijri range:", err);
         setError("Gagal mengambil rentang tanggal Hijriah.");
@@ -279,14 +283,16 @@ export default function CatatAmalanPage() {
   const boxWidth = useBreakpointValue({ base: "100%", md: "400px" });
 
   return (
-    <Box minH="100vh" p={4} bg="gray.100">
-      <Box w={boxWidth} mx="auto" p={6} bg="white" boxShadow="md" borderRadius="md">
-        <Flex justify="space-between" align="center" mb={4}>
-          <Flex align="center">
-            <FaCalendarAlt size={20} style={{ marginRight: "8px" }} />
+    <Box minH="100vh" p={4} bg="gray.50">
+      <Box w={boxWidth} mx="auto" p={6} bg="white" boxShadow="sm" borderRadius="xl" borderWidth="1px" borderColor="gray.100">
+        <Flex justify="space-between" align="center" mb={3}>
+          <Flex align="center" gap={2}>
+            <FaCalendarAlt size={18} />
             <Heading size="md">Catat Amalan Harian</Heading>
           </Flex>
-          <FaQuestionCircle size={20} cursor="pointer" onClick={onOpen} color="blue" />
+          <Tooltip label="Panduan" placement="left">
+            <FaQuestionCircle size={18} cursor="pointer" onClick={onOpen} color="#3182CE" />
+          </Tooltip>
         </Flex>
 
         <Select
@@ -295,7 +301,9 @@ export default function CatatAmalanPage() {
             setSelectedHijriDate(e.target.value);
             setLoading(true);
           }}
-          mt={2}
+          size="sm"
+          variant="filled"
+          borderRadius="md"
         >
           {hijriDates.map((date, index) => (
             <option key={index} value={date.hijri}>
@@ -305,49 +313,51 @@ export default function CatatAmalanPage() {
         </Select>
 
         {loading ? (
-          <Text textAlign="center" mt={4}>
-            Memuat...
-          </Text>
+          <VStack spacing={3} mt={4} align="stretch">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Box key={i} p={3} borderWidth="1px" borderRadius="md" borderColor="gray.100" boxShadow="xs" bg="white">
+                <SkeletonText noOfLines={2} spacing={2} skeletonHeight={3} />
+              </Box>
+            ))}
+          </VStack>
         ) : error ? (
           <Text color="red.500" textAlign="center" mt={4}>
             {error}
           </Text>
         ) : (
-          <VStack spacing={4} align="stretch" mt={4}>
+          <VStack spacing={3} align="stretch" mt={4}>
             {amalan.map((item, index) => (
               <Box
                 key={item.id}
                 p={3}
-                borderWidth={1}
+                borderWidth="1px"
                 borderRadius="md"
-                bg={
-                  item.isParent
-                    ? "gray.200"
-                    : item.done
-                    ? "green.100"
-                    : selectedAmalan.includes(item.id)
-                    ? "green.100"
-                    : "white"
-                }
+                borderColor={item.isParent ? "gray.200" : item.done ? "green.300" : "gray.100"}
+                bg={item.isParent ? "gray.50" : "white"}
+                _hover={item.isParent ? {} : { borderColor: "blue.300", boxShadow: "sm" }}
                 cursor={item.isParent ? "default" : "pointer"}
-                _hover={item.isParent ? {} : { bg: "green.50" }}
                 onClick={item.isParent ? undefined : () => toggleChecklist(index)}
               >
-                <Flex justify="space-between" align="center">
+                <Flex justify="space-between" align="center" gap={3}>
                   <Box>
-                    <Text fontWeight="bold">{item.nama}</Text>
+                    <Text fontWeight={item.isParent ? "semibold" : "medium"}>
+                      {item.nama}
+                    </Text>
                     {item.description && (
                       <Text fontSize="sm" color="gray.600">
                         {item.description}
                       </Text>
                     )}
                   </Box>
-                  {item.type === "checklist" && !item.isParent && (
-                    <Checkbox isChecked={item.done} onChange={() => toggleChecklist(index)} pointerEvents="none" />
+                  {!item.isParent && item.type === "checklist" && (
+                    <Badge colorScheme={item.done ? "green" : "gray"} variant="subtle" borderRadius="full" px={2}>
+                      {item.done ? "Selesai" : "Belum"}
+                    </Badge>
                   )}
                 </Flex>
                 {item.type === "dropdown" && (
                   <Select
+                    size="sm"
                     placeholder="Pilih opsi"
                     value={selectedValues[item.id] || ""}
                     onChange={(e) => handleDropdownChange(index, e.target.value)}
@@ -362,15 +372,19 @@ export default function CatatAmalanPage() {
                 )}
               </Box>
             ))}
-            <Button
-              colorScheme="blue"
-              w="full"
-              onClick={() => setIsConfirmOpen(true)}
-              mt={4}
-              isLoading={isSubmitting}
-            >
-              Simpan Amalan
-            </Button>
+
+            {/* Sticky footer actions inside card */}
+            <Box position="sticky" bottom={0} bg="white" pt={2} pb={1} zIndex={1}>
+              <Button
+                colorScheme="blue"
+                w="full"
+                onClick={() => setIsConfirmOpen(true)}
+                isLoading={isSubmitting}
+                borderRadius="full"
+              >
+                Simpan Amalan
+              </Button>
+            </Box>
           </VStack>
         )}
       </Box>
