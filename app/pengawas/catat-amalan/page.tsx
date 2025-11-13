@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   useToast,
   Box,
@@ -10,8 +10,6 @@ import {
   VStack,
   Heading,
   Text,
-  Divider,
-  Stack,
   Flex,
   useBreakpointValue,
   AlertDialog,
@@ -27,11 +25,14 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
+  Tooltip,
+  Skeleton,
+  SkeletonText,
+  Badge
 } from "@chakra-ui/react";
 import { api } from "@/lib/api";
 import { parseCookies } from "nookies";
-import moment from "moment-hijri";
 import { FaCalendarAlt, FaQuestionCircle } from "react-icons/fa";
 
 interface Amalan {
@@ -46,25 +47,104 @@ interface Amalan {
   isParent: boolean;
 }
 
+const PEMANASAN_RAMADHAN = [
+  "3 RAKAAT sebelum tidur",
+  "Bangun sebelum adzan Shubuh",
+  "5 waktu di Masjid",
+  "Dzikir pagi",
+  "Tilawah 5 lembar (minimal)",
+  "Sedekah Shubuh",
+  "Dhuha 4 Rakaat",
+  "Rawatib 12 Rakaat",
+  "Menulis faidah bermanfaat",
+  "Jasadiyah 30 menit (3x sepekan)",
+] as const;
+
+const normalizeAmalanName = (name?: string | null) =>
+  (name || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+const PEMANASAN_ORDER = PEMANASAN_RAMADHAN.reduce<Record<string, number>>(
+  (acc, label, index) => {
+    acc[normalizeAmalanName(label)] = index;
+    return acc;
+  },
+  {}
+);
+
+const normalizeOptionValue = (value?: string | null) =>
+  normalizeAmalanName(value).replace(/\s+/g, " ");
+
+const NEGATIVE_DROPDOWN_VALUES = new Set([
+  "tidak melakukan",
+  "tidak dhuha",
+]);
+
+const normalizeDateKey = (value?: string | null) =>
+  value ? value.trim().split(/\s+/).slice(0, 2).join(" ") : "";
+
+const hijriMonths = [
+  "Muharram",
+  "Shafar",
+  "Rabiul Awwal",
+  "Rabiul Akhir",
+  "Jumadil Awwal",
+  "Jumadil Akhir",
+  "Rajab",
+  "Sya'ban",
+  "Ramadhan",
+  "Syawal",
+  "Zulqaidah",
+  "Zulhijjah",
+];
+
 export default function CatatAmalanPage() {
   const [amalan, setAmalan] = useState<Amalan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [selectedAmalan, setSelectedAmalan] = useState<string[]>([]); // State untuk mengubah warna box
-  const [selectedValues, setSelectedValues] = useState<{
-    [key: string]: string;
-  }>({}); // Untuk nilai dropdown
-  const [hijriDate, setHijriDate] = useState<string>("-");
-  const [hijriDates, setHijriDates] = useState<{ hijri: string; masehi: string }[]>([]);
+  const [selectedValues, setSelectedValues] = useState<{ [key: string]: string }>({});
+  const [hijriDates, setHijriDates] = useState<string[]>([]);
   const [selectedHijriDate, setSelectedHijriDate] = useState<string>("");
-  const [selectedMasehiDate, setSelectedMasehiDate] = useState<string>("");
+  const [currentHijriDate, setCurrentHijriDate] = useState<string>("");
   const toast = useToast();
   const cancelRef = useRef(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  moment.locale("en");
+
+  const pemanasanKeySet = useMemo(
+    () => new Set(Object.keys(PEMANASAN_ORDER)),
+    []
+  );
+
+  useEffect(() => {
+    const fetchHijriToday = async () => {
+      try {
+        const response = await fetch("https://api.myquran.com/v2/cal/hijr/?adj=-1");
+        const result = await response.json();
+        if (!result.status) throw new Error("Gagal ambil tanggal Hijriah");
+
+        const { num } = result.data;
+        const day = Number(num?.[4]);
+        const monthIndex = Number(num?.[5]) - 1;
+        const year = Number(num?.[6]);
+
+        if (!day || monthIndex < 0 || monthIndex > 11 || !year) {
+          throw new Error("Format Hijriah tidak valid");
+        }
+
+        const today = `${day} ${hijriMonths[monthIndex]} ${year}`;
+        setCurrentHijriDate(today);
+      } catch (err) {
+        console.error("Gagal mengambil tanggal Hijriah hari ini:", err);
+      }
+    };
+
+    fetchHijriToday();
+  }, []);
 
   useEffect(() => {
     const fetchAmalan = async () => {
@@ -94,35 +174,13 @@ export default function CatatAmalanPage() {
   
         console.log("📅 Data hijriDate yang diterima:", data.hijriDate);
   
-        // ✅ Pastikan semua tanggal tetap ada dan hanya tambahkan yang baru
-        setHijriDates((prevHijriDates) => {
-          const maxHijriDate = parseInt(data.hijriDate.split(" ")[0]); // Ambil angka tanggal
-          const hijriMonth = data.hijriDate.split(" ")[1]; // Bulan Hijriah
-          const hijriYear = data.hijriDate.split(" ")[2]; // Tahun Hijriah
-          
-          const newDates = [];
-          for (let i = 1; i <= maxHijriDate; i++) {
-            const hijriString = `${i} ${hijriMonth} ${hijriYear}`;
-            const masehiDate = moment(hijriString, "iD iMMMM iYYYY").format("YYYY-MM-DD");
-  
-            // ✅ Hanya tambahkan jika belum ada di daftar
-            if (!prevHijriDates.some((date) => date.hijri === hijriString)) {
-              newDates.push({ hijri: hijriString, masehi: masehiDate });
-            }
-          }
-  
-          return [...prevHijriDates, ...newDates].sort((a, b) => 
-            parseInt(a.hijri.split(" ")[0]) - parseInt(b.hijri.split(" ")[0])
-          );
-        });
-  
-        // ✅ Set default tanggal hanya jika belum ada pilihan
-        if (!selectedHijriDate) {
-          setSelectedHijriDate(data.hijriDate);
-          const masehiDate = moment(data.hijriDate, "iD iMMMM iYYYY").format("YYYY-MM-DD");
-          setSelectedMasehiDate(masehiDate);
-        }
-  
+        const [dayStr, monthName, year] = (data.hijriDate || "").split(" ");
+        const maxDay = Number(dayStr) || 1;
+        const hijriList = Array.from({ length: Math.min(30, Math.max(1, maxDay)) }, (_, idx) =>
+          `${idx + 1} ${monthName} ${year}`.trim()
+        );
+        setHijriDates(hijriList);
+
         // ✅ Update daftar amalan
         const parentIds = new Set(data.data.map((item: any) => item.parentId).filter(Boolean));
   
@@ -158,32 +216,45 @@ export default function CatatAmalanPage() {
   
     fetchAmalan();
 
-    setSelectedAmalan([]); // Reset checklist setiap tanggal berubah
-  setSelectedValues({}); // Reset nilai dropdown juga
-  }, [selectedHijriDate]);  
-    
+    setSelectedValues({});
+  }, [selectedHijriDate]);
 
-  const toggleChecklist = (index: number) => {
-    const updatedAmalan = [...amalan];
-    updatedAmalan[index].done = !updatedAmalan[index].done;
-    setAmalan(updatedAmalan);
+  useEffect(() => {
+    if (selectedHijriDate || !currentHijriDate || !hijriDates.length) return;
 
-    setSelectedAmalan((prev) =>
-      updatedAmalan[index].done
-        ? [...prev, updatedAmalan[index].id]
-        : prev.filter((id) => id !== updatedAmalan[index].id)
+    const normalizedToday = normalizeDateKey(currentHijriDate);
+    const matchedToday = hijriDates.find(
+      (item) => normalizeDateKey(item) === normalizedToday
+    );
+
+    setSelectedHijriDate(
+      matchedToday || hijriDates[hijriDates.length - 1]
+    );
+  }, [selectedHijriDate, currentHijriDate, hijriDates]);
+
+  const toggleChecklist = (id: string) => {
+    setAmalan((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, done: !item.done } : item
+      )
     );
   };
 
-  const handleDropdownChange = (index: number, value: string) => {
-    const updatedAmalan = [...amalan];
-    updatedAmalan[index].done = value !== "Tidak Melakukan";
-    updatedAmalan[index].nilai = value; // ✅ Simpan nilai ke state utama
-    setAmalan(updatedAmalan);
+  const handleDropdownChange = (id: string, value: string) => {
+    const normalized = normalizeOptionValue(value);
+    const isNegative = NEGATIVE_DROPDOWN_VALUES.has(normalized);
+
+    setAmalan((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, done: !isNegative, nilai: value }
+          : item
+      )
+    );
 
     setSelectedValues((prev) => ({
       ...prev,
-      [updatedAmalan[index].id]: value,
+      [id]: value,
     }));
   };
 
@@ -255,6 +326,135 @@ export default function CatatAmalanPage() {
   };
 
   const boxWidth = useBreakpointValue({ base: "100%", md: "400px" });
+  const pemanasanAmalan = useMemo(
+    () =>
+      amalan
+        .filter((item) =>
+          pemanasanKeySet.has(normalizeAmalanName(item.nama))
+        )
+        .sort(
+          (a, b) =>
+            (PEMANASAN_ORDER[normalizeAmalanName(a.nama)] ?? 999) -
+            (PEMANASAN_ORDER[normalizeAmalanName(b.nama)] ?? 999)
+        ),
+    [amalan, pemanasanKeySet]
+  );
+
+  const regularAmalan = useMemo(
+    () =>
+      amalan
+        .filter((item) => !pemanasanKeySet.has(normalizeAmalanName(item.nama)))
+        .sort((a, b) => Number(b.isParent) - Number(a.isParent)),
+    [amalan, pemanasanKeySet]
+  );
+
+  const renderAmalanCard = (
+    item: Amalan,
+    options?: { order?: number; highlight?: boolean }
+  ) => {
+    const isChecklist = item.type === "checklist";
+    const isHighlighted = Boolean(options?.highlight);
+    const isCompleted = item.done && !item.isParent;
+    const borderColor = isHighlighted
+      ? item.done
+        ? "orange.400"
+        : "orange.200"
+      : item.isParent
+      ? "gray.200"
+      : item.done
+      ? "green.300"
+      : "gray.100";
+    const bgColor = item.isParent
+      ? "gray.50"
+      : isCompleted
+      ? "green.50"
+      : isHighlighted
+      ? "orange.50"
+      : "white";
+
+    const handleCardToggle = () => {
+      if (isChecklist && !item.isParent) {
+        toggleChecklist(item.id);
+      }
+    };
+
+    return (
+      <Box
+        key={item.id}
+        p={3}
+        borderWidth="1px"
+        borderRadius="md"
+        borderColor={borderColor}
+        bg={bgColor}
+        _hover={
+          item.isParent
+            ? {}
+            : {
+                borderColor: isHighlighted ? "orange.300" : "blue.300",
+                boxShadow: "sm",
+              }
+        }
+        cursor={isChecklist && !item.isParent ? "pointer" : "default"}
+        onClick={handleCardToggle}
+      >
+        <Flex justify="space-between" align="flex-start" gap={3}>
+          <Box flex="1">
+            <Flex align="center" gap={2} wrap="wrap">
+              {typeof options?.order === "number" && (
+                <Badge colorScheme="orange" borderRadius="full" px={2}>
+                  {String(options.order + 1).padStart(2, "0")}
+                </Badge>
+              )}
+              <Text fontWeight={item.isParent ? "semibold" : "medium"}>
+                {item.nama}
+              </Text>
+            </Flex>
+            {item.description && (
+              <Text fontSize="sm" color="gray.600" mt={1}>
+                {item.description}
+              </Text>
+            )}
+          </Box>
+          {!item.isParent && isChecklist && (
+            <Checkbox
+              isChecked={item.done}
+              onChange={(e) => {
+                e.stopPropagation();
+                toggleChecklist(item.id);
+              }}
+              colorScheme={isHighlighted ? "orange" : "green"}
+              pointerEvents="auto"
+            />
+          )}
+          {!item.isParent && !isChecklist && (
+            <Badge
+              colorScheme={item.done ? "green" : "gray"}
+              variant="subtle"
+              borderRadius="full"
+              px={2}
+            >
+              {item.done ? "Selesai" : "Belum"}
+            </Badge>
+          )}
+        </Flex>
+        {item.type === "dropdown" && (
+          <Select
+            size="sm"
+            placeholder="Pilih opsi"
+            value={selectedValues[item.id] || ""}
+            onChange={(e) => handleDropdownChange(item.id, e.target.value)}
+            mt={2}
+          >
+            {item.options?.map((option, optIndex) => (
+              <option key={optIndex} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <Box minH="100vh" p={4} bg="gray.100">
@@ -267,116 +467,93 @@ export default function CatatAmalanPage() {
         borderRadius="md"
       >
         <Flex justify="space-between" align="center" mb={4}>
-          {/* Ikon Kalender + Judul */}
-          <Flex align="center">
-            <FaCalendarAlt size={20} style={{ marginRight: "8px" }} />
+          <Flex align="center" gap={2}>
+            <FaCalendarAlt size={20} />
             <Heading size="md">Catat Amalan Harian</Heading>
           </Flex>
-
-          {/* Ikon Help */}
-          <FaQuestionCircle
-            size={20}
-            cursor="pointer"
-            onClick={onOpen}
-            color="blue"
-          />
+          <Tooltip label="Panduan" placement="left">
+            <FaQuestionCircle
+              size={20}
+              cursor="pointer"
+              onClick={onOpen}
+              color="blue"
+            />
+          </Tooltip>
         </Flex>
 
         <Select
           value={selectedHijriDate}
           onChange={(e) => {
-            const hijriDate = e.target.value;
-            const masehiDate =
-              hijriDates.find((d) => d.hijri === hijriDate)?.masehi || "";
-            setSelectedHijriDate(hijriDate);
-            setSelectedMasehiDate(masehiDate);
-            setLoading(true); // 🔹 Agar tampilan menunjukkan "Memuat..." sebelum data baru masuk
+            setSelectedHijriDate(e.target.value);
+            setLoading(true);
           }}
           mt={2}
         >
           {hijriDates.map((date, index) => (
-            <option key={index} value={date.hijri}>
-              {date.hijri}
+            <option key={index} value={date}>
+              {date}
             </option>
           ))}
         </Select>
 
         {loading ? (
-          <Text textAlign="center" mt={4}>
-            Memuat...
-          </Text>
+          <VStack spacing={3} mt={4} align="stretch">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Box
+                key={i}
+                p={3}
+                borderWidth="1px"
+                borderRadius="md"
+                borderColor="gray.100"
+                boxShadow="xs"
+                bg="white"
+              >
+                <SkeletonText noOfLines={2} spacing={2} skeletonHeight={3} />
+              </Box>
+            ))}
+          </VStack>
         ) : error ? (
           <Text color="red.500" textAlign="center" mt={4}>
             {error}
           </Text>
         ) : (
           <VStack spacing={4} align="stretch" mt={4}>
-            {amalan.map((item, index) => (
+            {pemanasanAmalan.length > 0 && (
               <Box
-                key={item.id}
-                p={3}
-                borderWidth={1}
-                borderRadius="md"
-                bg={
-                  item.isParent
-                    ? "gray.200" // ✅ Jika parent, abu-abu
-                    : item.done
-                    ? "green.100" // ✅ Jika amalan sudah "done", hijau
-                    : selectedAmalan.includes(item.id)
-                    ? "green.100"
-                    : "white" // ✅ Jika dipilih, hijau juga
-                }
-                cursor={item.isParent ? "default" : "pointer"} // ✅ Parent tidak bisa diklik
-                _hover={item.isParent ? {} : { bg: "green.50" }} // ✅ Hover hanya untuk anak
-                onClick={
-                  item.isParent ? undefined : () => toggleChecklist(index)
-                } // ✅ Hanya bisa klik jika bukan parent
+                borderWidth="1px"
+                borderRadius="lg"
+                borderColor="orange.200"
+                bg="orange.50"
+                p={4}
               >
-                <Flex justify="space-between" align="center">
-                  <Box>
-                    <Text fontWeight="bold">{item.nama}</Text>
-                    {item.description && (
-                      <Text fontSize="sm" color="gray.600">
-                        {item.description}
-                      </Text>
-                    )}
-                  </Box>
-                  {item.type === "checklist" &&
-                    !item.isParent && ( // ✅ Hanya tampil jika bukan parent
-                      <Checkbox
-                        isChecked={item.done}
-                        onChange={() => toggleChecklist(index)}
-                        pointerEvents="none"
-                      />
-                    )}
-                </Flex>
-                {item.type === "dropdown" && (
-                  <Select
-                    placeholder="Pilih opsi"
-                    value={selectedValues[item.id] || ""} // ✅ Menampilkan nilai yang sudah tersimpan
-                    onChange={(e) =>
-                      handleDropdownChange(index, e.target.value)
-                    }
-                    mt={2}
-                  >
-                    {item.options?.map((option, optIndex) => (
-                      <option key={optIndex} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </Select>
-                )}
+                <Heading size="sm" color="orange.600">
+                  Pemanasan Ramadhan
+                </Heading>
+                <Text fontSize="sm" color="orange.700" mt={1}>
+                  Catat 10 amalan inti ini setiap hari sebagai pemanasan menuju
+                  Ramadhan.
+                </Text>
+                <VStack spacing={3} align="stretch" mt={3}>
+                  {pemanasanAmalan.map((item, index) =>
+                    renderAmalanCard(item, { order: index, highlight: true })
+                  )}
+                </VStack>
               </Box>
-            ))}
-            <Button
-              colorScheme="blue"
-              w="full"
-              onClick={() => setIsConfirmOpen(true)}
-              mt={4}
-              isLoading={isSubmitting}
-            >
-              Simpan Amalan
-            </Button>
+            )}
+
+            {regularAmalan.map((item) => renderAmalanCard(item))}
+
+            <Box position="sticky" bottom={0} bg="white" pt={2} pb={1} zIndex={1}>
+              <Button
+                colorScheme="blue"
+                w="full"
+                onClick={() => setIsConfirmOpen(true)}
+                isLoading={isSubmitting}
+                borderRadius="full"
+              >
+                Simpan Amalan
+              </Button>
+            </Box>
           </VStack>
         )}
       </Box>
