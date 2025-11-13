@@ -11,6 +11,8 @@ export const api = {
   postAmalanHarian: `${API_URL}/amalan/amalan-harian`,
   getAmalanHarian: `${API_URL}/amalan/harian`,
   createAmalan: `${API_URL}/amalan/harian`,
+  getAmalanDetail: (id: string) => `${API_URL}/amalan/${id}`,
+  deleteAmalan: (id: string) => `${API_URL}/amalan/${id}`,
   updateStatusAmalan: `${API_URL}/amalan/update-status`,
 
   dashboardMurrabi: `${API_URL}/dashboard/murabbi`,

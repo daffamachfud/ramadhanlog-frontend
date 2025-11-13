@@ -21,29 +21,47 @@ import {
   Switch,
   Flex,
   useToast,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react";
-import { ArrowBackIcon, QuestionIcon } from "@chakra-ui/icons";
-import { useEffect, useState } from "react";
+import { ArrowBackIcon, QuestionIcon, DeleteIcon } from "@chakra-ui/icons";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { parseCookies } from "nookies";
 import { api } from "@/lib/api";
 
 export default function AmalanDetail() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isInfoOpen,
+    onOpen: onInfoOpen,
+    onClose: onInfoClose,
+  } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
   const toast = useToast();
 
   const [amalanDetail, setAmalanDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5002/api"; 
+  const [isDeleting, setIsDeleting] = useState(false);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const amalanId = id;
 
   const fetchAmalanDetail = async () => {
     try {
+      if (!amalanId) return;
       const cookies = parseCookies();
       const token = cookies.token;
 
-      const response = await fetch(`${baseUrl}/amalan/${id}`, {
+      const response = await fetch(api.getAmalanDetail(amalanId), {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -77,7 +95,7 @@ export default function AmalanDetail() {
 
   useEffect(() => {
     fetchAmalanDetail();
-  }, []);
+  }, [amalanId]);
 
   const handleToggleStatus = async () => {
     if (!amalanDetail) return;
@@ -127,6 +145,55 @@ export default function AmalanDetail() {
     }
   };
 
+  const handleDeleteAmalan = async () => {
+    if (!amalanId) return;
+
+    try {
+      setIsDeleting(true);
+      const cookies = parseCookies();
+      const token = cookies.token;
+
+      const response = await fetch(api.deleteAmalan(amalanId), {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      let result: any = null;
+      try {
+        result = await response.json();
+      } catch {
+        // Response tanpa body
+      }
+
+      if (!response.ok) {
+        throw new Error(result?.message || "Gagal menghapus amalan");
+      }
+
+      toast({
+        title: "Amalan berhasil dihapus",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+
+      onDeleteClose();
+      router.replace("/murabbi/amalan");
+    } catch (error: any) {
+      console.error("❌ Gagal menghapus amalan:", error);
+      toast({
+        title: "Gagal menghapus amalan",
+        description: error?.message || "Terjadi kesalahan",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Box p={4} borderWidth={1} borderRadius="lg" mt={4}>
       <HStack spacing={3} justify="space" align="center" mb={4}>
@@ -146,7 +213,7 @@ export default function AmalanDetail() {
         <IconButton
           icon={<QuestionIcon />}
           aria-label="Help"
-          onClick={onOpen}
+          onClick={onInfoOpen}
           colorScheme="gray"
           variant="ghost"
           size="md"
@@ -193,12 +260,22 @@ export default function AmalanDetail() {
               {amalanDetail.status === "active" ? "Aktif" : "Tidak Aktif"}
             </Badge>
           </Flex>
+
+          <Button
+            leftIcon={<DeleteIcon />}
+            colorScheme="red"
+            variant="outline"
+            onClick={onDeleteOpen}
+            isDisabled={isDeleting}
+          >
+            Hapus Amalan
+          </Button>
         </VStack>
       ) : (
         <Text color="red.500">Data amalan tidak ditemukan</Text>
       )}
 
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isInfoOpen} onClose={onInfoClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Informasi</ModalHeader>
@@ -210,12 +287,40 @@ export default function AmalanDetail() {
             </Text>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" onClick={onClose}>
+            <Button colorScheme="blue" onClick={onInfoClose}>
               Mengerti
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={isDeleting ? () => {} : onDeleteClose}
+        isCentered
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Hapus Amalan
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Amalan yang dihapus tidak dapat dikembalikan. Yakin ingin melanjutkan?
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteClose} isDisabled={isDeleting}>
+                Batal
+              </Button>
+              <Button colorScheme="red" onClick={handleDeleteAmalan} ml={3} isLoading={isDeleting}>
+                Hapus
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 }
