@@ -25,6 +25,18 @@ import { useEffect, useState, useRef } from "react";
 import { fetchDetailLaporanTholib } from "@/app/murabbi/laporan-tholib/laporanTholibService";
 import AmalanChart from "@/app/tholib/components/AmalanChart";
 
+const normalizeDateKey = (value?: string | null) =>
+  value ? value.trim().split(/\s+/).slice(0, 2).join(" ") : "";
+
+const extractMonthLabel = (value: string) => {
+  const tokens = value.trim().split(/\s+/);
+  if (tokens.length <= 1) return "";
+  const monthTokens = tokens
+    .slice(1)
+    .filter((token) => Number.isNaN(Number(token)));
+  return monthTokens.join(" ") || tokens[1] || "";
+};
+
 export default function LaporanTholibDetail() {
   const { id } = useParams();
   const router = useRouter();
@@ -54,14 +66,31 @@ export default function LaporanTholibDetail() {
         if (response) {
           console.log("📌 API Initial Response:", response);
           setChartData(response.line_chart || []);
-          setAvailableDates(response.button_dates || []);
+          const dates: string[] = Array.isArray(response.button_dates)
+            ? response.button_dates
+            : [];
+          setAvailableDates(dates);
 
-          if (!selectedHijriDate && response.hijri_current_date) {
-            console.log(
-              "🟢 Set Default Hijri Date:",
+          if (!selectedHijriDate) {
+            const normalizedCurrent = normalizeDateKey(
               response.hijri_current_date
             );
-            setSelectedHijriDate(response.hijri_current_date);
+            const matchedDate =
+              dates.find(
+                (date: string) => normalizeDateKey(date) === normalizedCurrent
+              ) ||
+              null;
+
+            const fallbackDate =
+              matchedDate ||
+              (dates.length ? dates[dates.length - 1] : null) ||
+              response.hijri_current_date ||
+              null;
+
+            if (fallbackDate) {
+              console.log("🟢 Set Default Hijri Date:", fallbackDate);
+              setSelectedHijriDate(fallbackDate);
+            }
           }
 
           setAmalanList(response.amalan_list || []);
@@ -166,28 +195,20 @@ export default function LaporanTholibDetail() {
       <Box mt={4} overflowX="auto" whiteSpace="nowrap" ref={scrollRef}>
         <HStack spacing={2} width="max-content">
           {availableDates.map((date, index) => {
-            const day = date.split(" ")[0]; // Ambil angka saja, contoh "13"
-            const isSelected = selectedHijriDate === date; // 🔥 Pastikan hanya satu button yang dipilih
+            const tokens = date.trim().split(/\s+/);
+            const day = tokens[0] || date;
+            const compareKey = normalizeDateKey(date);
+            const selectedKey = normalizeDateKey(selectedHijriDate);
+            const isSelected = compareKey === selectedKey;
+            const monthLabel = extractMonthLabel(date) || tokens[1] || "-";
 
             return (
               <Button
                 key={`date-${index}`}
                 size="sm"
-                variant={
-                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
-                    ? "solid"
-                    : "outline"
-                } // ✅ Bandingkan hanya "13 Ramadhan"
-                colorScheme={
-                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
-                    ? "blue"
-                    : "gray"
-                }
-                className={
-                  selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
-                    ? "selected-date"
-                    : ""
-                }
+                variant={isSelected ? "solid" : "outline"}
+                colorScheme={isSelected ? "blue" : "gray"}
+                className={isSelected ? "selected-date" : ""}
                 onClick={() => {
                   console.log(
                     "🔵 Button Clicked:",
@@ -200,18 +221,14 @@ export default function LaporanTholibDetail() {
                 flexDirection="column"
                 height="50px"
                 borderRadius="md"
-                data-day={day} // ✅ Tambahkan atribut data-day
+                data-day={day}
               >
                 <Text
                   fontSize="xs"
                   fontWeight="bold"
-                  color={
-                    selectedHijriDate?.split(" ").slice(0, 2).join(" ") === date
-                      ? "white"
-                      : "gray.400"
-                  }
+                  color={isSelected ? "white" : "gray.400"}
                 >
-                  {date.split(" ")[1]} {/* contoh: "Ramadhan", "Syawal", dst */}
+                  {monthLabel}
                 </Text>
                 <Text fontSize="md">{day}</Text>
               </Button>
@@ -267,9 +284,9 @@ export default function LaporanTholibDetail() {
           <ModalCloseButton />
           <ModalBody>
             <Text>
-              Laporan ini menampilkan grafik amalan dari 30 hari ke belakang
-              berdasarkan kalender Hijriah. Kamu bisa melihat detail amalan
-              harian dengan memilih tanggal tertentu.
+              Laporan ini menampilkan grafik amalan berdasarkan kalender Hijriah
+              yang tersedia. Pilih tanggal untuk melihat detail setiap amalan
+              harian.
             </Text>
           </ModalBody>
           <ModalFooter>
