@@ -2,6 +2,7 @@
 import {
   Box,
   Button,
+  IconButton,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -15,10 +16,13 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { FaHands } from "react-icons/fa";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function QuranPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const router = useRouter();
 
   useEffect(() => {
     onOpen(); // auto open dialog saat halaman dibuka
@@ -26,6 +30,13 @@ export default function QuranPage() {
 
   return (
     <Box p={6}>
+      <IconButton
+        aria-label="Kembali"
+        icon={<ArrowBackIcon />}
+        variant="ghost"
+        onClick={() => router.back()}
+        mb={4}
+      />
       <VStack spacing={4} align="center" justify="center" textAlign="center">
         <Icon as={FaHands} boxSize={12} color="gray.400" />
         <Text fontSize="2xl" fontWeight="bold">
