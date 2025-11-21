@@ -85,6 +85,58 @@ const NEGATIVE_DROPDOWN_VALUES = new Set([
 const normalizeDateKey = (value?: string | null) =>
   value ? value.trim().split(/\s+/).slice(0, 2).join(" ") : "";
 
+type HijriParts = {
+  day?: number;
+  month?: string;
+  year?: number;
+};
+
+const parseHijriDateParts = (value?: string | null): HijriParts => {
+  if (!value) return {};
+
+  const parts = value.trim().split(/\s+/);
+  const day = Number(parts.shift());
+  if (!day || Number.isNaN(day)) return {};
+
+  const possibleYear = parts[parts.length - 1];
+  const numericYear = possibleYear ? Number(possibleYear) : NaN;
+  const year = Number.isNaN(numericYear) ? undefined : numericYear;
+  if (!Number.isNaN(numericYear)) {
+    parts.pop();
+  }
+
+  return {
+    day,
+    month: parts.join(" ").trim(),
+    year,
+  };
+};
+
+const normalizeHijriMonthName = (value?: string | null) => {
+  const normalized = (value || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const alias: Record<string, string> = {
+    "rabiul awal": "Rabiul Awwal",
+    "rabiul awwal": "Rabiul Awwal",
+    "rabiul akhir": "Rabiul Akhir",
+    "jumadil awal": "Jumadil Awwal",
+    "jumadil awwal": "Jumadil Awwal",
+    "jumadil akhir": "Jumadil Akhir",
+  };
+
+  const exact = hijriMonths.find(
+    (month) => month.toLowerCase() === normalized
+  );
+  if (exact) return exact;
+
+  if (alias[normalized]) return alias[normalized];
+
+  return (value || "").trim();
+};
+
 const hijriMonths = [
   "Muharram",
   "Shafar",
@@ -173,11 +225,15 @@ export default function CatatAmalanPage() {
         if (!data.success) throw new Error(data.message);
   
         console.log("📅 Data hijriDate yang diterima:", data.hijriDate);
-  
-        const [dayStr, monthName, year] = (data.hijriDate || "").split(" ");
-        const maxDay = Number(dayStr) || 1;
-        const hijriList = Array.from({ length: Math.min(30, Math.max(1, maxDay)) }, (_, idx) =>
-          `${idx + 1} ${monthName} ${year}`.trim()
+
+        const parsedHijri = parseHijriDateParts(data.hijriDate);
+        const todayHijri = parseHijriDateParts(currentHijriDate);
+        const maxDay = Math.min(30, Math.max(1, parsedHijri.day || todayHijri.day || 1));
+        const monthName = normalizeHijriMonthName(parsedHijri.month || todayHijri.month || "");
+        const year = parsedHijri.year ?? todayHijri.year;
+
+        const hijriList = Array.from({ length: maxDay }, (_, idx) =>
+          [idx + 1, monthName, year].filter(Boolean).join(" ")
         );
         setHijriDates(hijriList);
 
@@ -217,18 +273,28 @@ export default function CatatAmalanPage() {
     fetchAmalan();
 
     setSelectedValues({});
-  }, [selectedHijriDate]);
+  }, [selectedHijriDate, currentHijriDate]);
 
   useEffect(() => {
-    if (selectedHijriDate || !currentHijriDate || !hijriDates.length) return;
+    if (!currentHijriDate || !hijriDates.length) return;
+
+    const hasExactSelected =
+      selectedHijriDate && hijriDates.includes(selectedHijriDate);
+    if (hasExactSelected) return;
 
     const normalizedToday = normalizeDateKey(currentHijriDate);
+    const normalizedSelected = normalizeDateKey(selectedHijriDate);
+    const matchSelected = normalizedSelected
+      ? hijriDates.find(
+          (item) => normalizeDateKey(item) === normalizedSelected
+        )
+      : null;
     const matchedToday = hijriDates.find(
       (item) => normalizeDateKey(item) === normalizedToday
     );
 
     setSelectedHijriDate(
-      matchedToday || hijriDates[hijriDates.length - 1]
+      matchSelected || matchedToday || hijriDates[hijriDates.length - 1]
     );
   }, [selectedHijriDate, currentHijriDate, hijriDates]);
 
