@@ -175,7 +175,7 @@ export default function CatatAmalanPage() {
   useEffect(() => {
     const fetchHijriToday = async () => {
       try {
-        const response = await fetch("https://api.myquran.com/v2/cal/hijr/?adj=-1");
+        const response = await fetch("https://api.myquran.com/v2/cal/hijr/?adj=-2");
         const result = await response.json();
         if (!result.status) throw new Error("Gagal ambil tanggal Hijriah");
 
